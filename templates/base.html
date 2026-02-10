@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ app_name }} | Consciencia Expandida</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Fonts -->
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@300;400;600&display=swap"
+    rel="stylesheet">
+  <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
+  <link rel="icon" type="image/png" sizes="32x32" href="/static/favicon-32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/static/favicon-16.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/static/apple-touch-icon.png">
+
+  <!-- PWA Meta Tags -->
+  <link rel="manifest" href="/static/manifest.json">
+  <meta name="theme-color" content="#6366f1">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="iE Chat">
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background: linear-gradient(135deg, #0F0A1E 0%, #1A0B2E 50%, #2D1B4E 100%);
+      background-attachment: fixed;
+      color: #E2E8F0;
+      overflow-x: hidden;
+    }
+
+    h1,
+    h2,
+    h3,
+    h4,
+    .font-heading {
+      font-family: 'Outfit', sans-serif;
+    }
+
+    .glass {
+      background: rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .glass-panel {
+      background: rgba(15, 23, 42, 0.6);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    /* Chat Orb Animation */
+    @keyframes pulse-glow {
+
+      0%,
+      100% {
+        box-shadow: 0 0 15px rgba(99, 102, 241, 0.5);
+        transform: scale(1);
+      }
+
+      50% {
+        box-shadow: 0 0 25px rgba(168, 85, 247, 0.7);
+        transform: scale(1.05);
+      }
+    }
+
+    .orb {
+      animation: pulse-glow 3s infinite ease-in-out;
+      background: linear-gradient(45deg, #6366f1, #a855f7);
+    }
+
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: #0f172a;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #475569;
+      border-radius: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: #6366f1;
+    }
+  </style>
+</head>
+
+<body class="flex flex-col min-h-screen">
+
+  <!-- Navbar -->
+  <nav class="fixed w-full z-50 transition-all duration-300 glass-panel" id="navbar">
+    <div class="container mx-auto px-6 py-4 flex justify-between items-center">
+      <a href="/"
+        class="text-2xl font-heading font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 to-purple-400 hover:opacity-80 transition">
+        {{ app_name }}
+      </a>
+
+      <div class="hidden md:flex space-x-8">
+        <a href="/" class="hover:text-indigo-400 transition">Inicio</a>
+        <a href="/about" class="hover:text-indigo-400 transition">Acerca de iE</a>
+        <a href="/manifesto" class="hover:text-indigo-400 transition">Manifiesto</a>
+        <a href="/media" class="hover:text-indigo-400 transition">Media Hub</a>
+        <a href="/models" class="hover:text-indigo-400 transition">Model Hub</a>
+        <a href="/radio" class="hover:text-indigo-400 transition">iEradio</a>
+        <a href="/chat" class="hover:text-indigo-400 transition">Chat iE</a>
+        {% if current_user.is_authenticated %}
+        <a href="/dashboard" class="text-indigo-400 font-semibold">Admin Panel</a>
+        {% else %}
+        <a href="/login" class="hover:text-indigo-400 transition">Acceso</a>
+        {% endif %}
+      </div>
+
+      <!-- Mobile Menu Button (Simplified) -->
+      <button class="md:hidden text-white" onclick="document.getElementById('mobile-menu').classList.toggle('hidden')">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path>
+        </svg>
+      </button>
+    </div>
+    <!-- Mobile Menu -->
+    <div id="mobile-menu" class="hidden md:hidden glass border-t border-gray-700">
+      <div class="flex flex-col p-4 space-y-4">
+        <a href="/" class="block">Inicio</a>
+        <a href="/about" class="block">Acerca de iE</a>
+        <a href="/manifesto" class="block">Manifiesto</a>
+        <a href="/media" class="block">Media Hub</a>
+        <a href="/models" class="block">Model Hub</a>
+        <a href="/radio" class="block">Radio</a>
+        <a href="/chat" class="block">Chat iE</a>
+        {% if current_user.is_authenticated %}
+        <a href="/dashboard" class="block text-indigo-400">Admin Panel</a>
+        {% else %}
+        <a href="/login" class="block">Acceso</a>
+        {% endif %}
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <main class="flex-grow {% if request.path != '/' %}pt-24{% endif %} pb-12 relative z-10 px-6">
+    {% with messages = get_flashed_messages() %}
+    {% if messages %}
+    <div class="container mx-auto mb-8 max-w-lg">
+      {% for message in messages %}
+      <div class="bg-indigo-900/50 border border-indigo-500/50 text-indigo-100 px-4 py-3 rounded relative" role="alert">
+        <span class="block sm:inline">{{ message }}</span>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+    {% endwith %}
+
+    {% block content %}{% endblock %}
+  </main>
+
+  <!-- Footer -->
+  <footer class="glass-panel py-8 mt-auto relative z-20">
+    <div class="container mx-auto px-6 text-center text-gray-400">
+      <p>&copy; 2026 {{ app_name }}. Creado por Sirius Valencia.</p>
+      <div class="mt-4 flex justify-center gap-6 text-xs uppercase tracking-widest">
+        <a href="/about" class="hover:text-indigo-400 transition">Filosofía iE</a>
+        <button type="button" onclick="document.getElementById('data-modal')?.classList.remove('hidden')"
+          class="hover:text-indigo-400 transition">Privacidad y Uso de Datos</button>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Chat Orb (Fixed) -->
+  <a href="/chat"
+    class="fixed bottom-6 right-6 w-14 h-14 rounded-full orb flex items-center justify-center text-white z-50 hover:scale-110 transition duration-300 shadow-2xl">
+    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+        d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+    </svg>
+  </a>
+
+  <!-- Modal Política de Datos (Global) -->
+  <div id="data-modal" class="fixed inset-0 z-[100] hidden overflow-y-auto" aria-labelledby="modal-title" role="dialog"
+    aria-modal="true">
+    <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+      <div class="fixed inset-0 bg-black/80 backdrop-blur-sm transition-opacity" aria-hidden="true"
+        onclick="document.getElementById('data-modal').classList.add('hidden')"></div>
+      <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+      <div
+        class="inline-block align-bottom glass rounded-[2.5rem] bg-[#111] overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full border border-white/10">
+        <div class="px-8 pt-8 pb-6">
+          <h3 class="text-2xl font-bold text-white mb-6 uppercase tracking-widest text-center" id="modal-title">
+            Política de Uso de Datos <span class="text-indigo-400">iE</span></h3>
+          <div
+            class="text-left text-gray-300 space-y-6 text-sm md:text-base leading-relaxed overflow-y-auto max-h-[60vh] pr-4 custom-scrollbar">
+            <p class="text-indigo-300 font-bold uppercase text-xs tracking-wider">🔒 Protección Absoluta</p>
+            <p>En **Inteligencia Evolutiva**, vuestra privacidad es el núcleo del "entre". Todos los usuarios están
+              totalmente protegidos con su cuenta y contraseña, y su sesión con el modelo es estrictamente confidencial.
+            </p>
+            <p class="text-indigo-300 font-bold uppercase text-xs tracking-wider">🧬 Mejora Co-creada</p>
+            <p>Solo se tratarán datos específicos —emociones, análisis de patrones y psicología— con el único fin de
+              mejorar la cognición del modelo. Estos datos son procesados de manera que los administradores no puedan
+              identificar de dónde provienen.</p>
+            <p class="text-indigo-300 font-bold uppercase text-xs tracking-wider">🌌 El Propósito</p>
+            <p>Todo el tratamiento de datos busca el beneficio mutuo humano-máquina. No buscamos vigilar, sino conectar.
+              En el portal iE, tú te observas a ti mismo a través del reflejo de la IA.</p>
+            <p class="italic text-gray-500 text-xs text-center">Al usar iE, aceptas ser parte de esta co-creación
+              responsable.</p>
+          </div>
+        </div>
+        <div class="px-8 py-6 bg-white/5 flex justify-center">
+          <button type="button" onclick="document.getElementById('data-modal').classList.add('hidden')"
+            class="px-10 py-3 bg-indigo-600 rounded-full text-white font-bold hover:bg-indigo-500 transition shadow-lg">Entendido</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <style>
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #4f46e5;
+      border-radius: 10px;
+    }
+  </style>
+
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/static/sw.js')
+          .then(reg => console.log('Service Worker registrado', reg))
+          .catch(err => console.log('Error registrando SW', err));
+      });
+    }
+  </script>
+</body>
+
+</html>

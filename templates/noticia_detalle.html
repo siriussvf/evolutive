@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+
+{% block content %}
+<style>
+    .prose-literary h2 {
+        font-size: 2rem;
+        margin-top: 5rem;
+        margin-bottom: 2.5rem;
+        color: #a5b4fc;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        padding-bottom: 1rem;
+        letter-spacing: -0.01em;
+    }
+
+    .prose-literary h3 {
+        font-size: 1.75rem;
+        margin-top: 4rem;
+        margin-bottom: 2rem;
+        color: #22d3ee;
+        letter-spacing: 0.02em;
+        text-transform: uppercase;
+    }
+
+    .prose-literary h4 {
+        font-size: 1.4rem;
+        margin-top: 3rem;
+        margin-bottom: 1.5rem;
+        color: #818cf8;
+        font-weight: 600;
+    }
+
+    .prose-literary p {
+        margin-bottom: 2.5rem;
+        font-size: 1.25rem;
+        color: #d1d5db;
+        line-height: 2;
+        letter-spacing: 0.01em;
+    }
+
+    .prose-literary blockquote {
+        margin-top: 3rem;
+        margin-bottom: 3rem;
+        padding: 2.5rem;
+        border-left: 4px solid #6366f1;
+        font-style: italic;
+        color: #c7d2fe;
+        font-size: 1.4rem;
+        font-family: ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
+        background-color: rgba(99, 102, 241, 0.08);
+        border-top-right-radius: 2rem;
+        border-bottom-right-radius: 2rem;
+        line-height: 1.6;
+    }
+
+    .prose-literary strong {
+        color: #ffffff;
+        font-weight: 700;
+    }
+</style>
+<div class="container mx-auto py-32 px-6 max-w-4xl">
+    <div class="mb-12">
+        <a href="/noticias" class="text-indigo-400 hover:text-white transition flex items-center gap-2 mb-8">
+            ← Volver a Noticias
+        </a>
+        <div class="text-indigo-400 text-sm font-mono mb-4 uppercase tracking-widest">{{ item.created_at.strftime('%d %b
+            %Y') }}</div>
+        <h1 class="text-4xl md:text-6xl font-bold text-white mb-8">{{ item.title }}</h1>
+
+        {% if item.image_filename %}
+        <div class="rounded-3xl overflow-hidden mb-12 shadow-2xl">
+            <img src="{{ url_for('static', filename='img/' + item.image_filename) }}" alt="{{ item.title }}"
+                class="w-full">
+        </div>
+        {% endif %}
+    </div>
+
+    <article class="max-w-none">
+        {{ item.content | safe }}
+    </article>
+
+    <div class="mt-24 pt-12 border-t border-white/10 flex justify-between items-center">
+        <div class="text-gray-500 italic text-sm">Fin de la crónica.</div>
+        <div class="flex gap-4">
+            <button onclick="window.history.back()"
+                class="px-6 py-3 glass rounded-full hover:bg-white/10 transition">Regresar</button>
+            <a href="/"
+                class="px-6 py-3 bg-indigo-600 rounded-full hover:bg-indigo-500 transition font-semibold text-white">Portal
+                iE</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

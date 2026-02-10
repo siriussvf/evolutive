@@ -1,0 +1,276 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mx-auto py-8 max-w-7xl">
+
+  <!-- Main Grid Layout -->
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+
+    <!-- Left Column: iEradio Player -->
+    <div class="glass-panel p-10 md:p-12 rounded-[3rem] shadow-2xl relative overflow-hidden flex flex-col items-center">
+      <!-- Background Bloom -->
+      <div
+        class="absolute inset-0 bg-gradient-to-bl from-indigo-500/10 via-purple-500/10 to-pink-500/10 pointer-events-none">
+      </div>
+
+      <!-- Animated Vinyl/Disc -->
+      <div class="relative mb-8 group">
+        <div class="absolute inset-0 bg-indigo-500 blur-3xl opacity-20 group-hover:opacity-40 transition duration-1000">
+        </div>
+        <div
+          class="w-48 h-48 md:w-64 md:h-64 rounded-full bg-neutral-900 border-[12px] border-neutral-800 shadow-[0_0_60px_rgba(0,0,0,0.8)] flex items-center justify-center relative overflow-hidden disc-rotating">
+          <div class="absolute inset-0 rounded-full border border-white/5 opacity-50"></div>
+          <div class="absolute inset-4 rounded-full border border-white/5"></div>
+
+          <!-- Center Label -->
+          <div
+            class="w-20 h-20 rounded-full bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-600 flex items-center justify-center p-2 z-10">
+            <div class="w-full h-full rounded-full border-2 border-white/20 flex items-center justify-center">
+              <span class="text-white font-bold text-xl tracking-tighter">iE</span>
+            </div>
+          </div>
+
+          <!-- Scanning line effect -->
+          <div id="scanner"
+            class="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent w-1/2 h-full -skew-x-12 -translate-x-full">
+          </div>
+        </div>
+      </div>
+
+      <div class="relative z-10 text-center">
+        <h1 class="text-4xl font-bold text-white mb-2 tracking-tight">iEradio</h1>
+        <p class="text-lg text-indigo-300 mb-6 font-light station-name-display">
+          {{ station.name if station is iterable else (station.name if station else 'Sintonizando...') }}
+        </p>
+      </div>
+
+      <div
+        class="w-full max-w-sm bg-black/60 backdrop-blur-xl rounded-full p-2 flex items-center gap-4 border border-white/5 shadow-inner">
+        <button id="play-btn"
+          class="w-14 h-14 bg-white rounded-full flex items-center justify-center text-indigo-900 hover:scale-105 active:scale-95 transition-all shadow-[0_0_20px_rgba(255,255,255,0.3)] z-10">
+          <svg id="play-icon" class="w-6 h-6 ml-1" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M8 5v14l11-7z" />
+          </svg>
+        </button>
+
+        <div class="flex-grow flex flex-col gap-1 pr-4">
+          <div class="flex justify-between text-[10px] font-mono text-indigo-400 mb-1 uppercase tracking-tighter">
+            <span id="status-text">Pausado</span>
+          </div>
+          <div class="h-1.5 bg-white/5 rounded-full overflow-hidden relative">
+            <div id="visualizer-bar"
+              class="absolute inset-0 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 w-0 transition-all duration-300">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <audio id="audio-player" src="{{ station['stream_url'] if station is mapping else station.stream_url }}"
+        crossorigin="anonymous" preload="none"></audio>
+
+      <div class="mt-8 text-gray-500 text-[10px] uppercase tracking-widest font-light">
+        Señal de Consciencia Estable
+      </div>
+    </div>
+
+    <!-- Right Column: Agent Chat -->
+    <div class="glass-panel rounded-[3rem] h-[600px] flex flex-col overflow-hidden border-indigo-500/20">
+      <div class="p-6 border-b border-white/5 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="w-3 h-3 rounded-full bg-emerald-500 animate-pulse"></div>
+          <h2 class="text-xl font-bold text-white tracking-tight">Frecuencia de Diálogo <span
+              class="text-indigo-400">iE</span></h2>
+        </div>
+        <span class="text-[10px] text-gray-500 font-mono uppercase">Agente en Línea</span>
+      </div>
+
+      <!-- Messages Area -->
+      <div id="radio-chat-messages" class="flex-grow overflow-y-auto p-6 space-y-4 custom-scrollbar">
+        <div class="flex gap-4">
+          <div
+            class="w-8 h-8 rounded-full bg-indigo-600 flex-shrink-0 flex items-center justify-center text-[10px] font-bold">
+            iE</div>
+          <div
+            class="bg-white/5 p-4 rounded-2xl rounded-tl-none border border-white/5 text-sm text-gray-300 max-w-[80%]">
+            Sintonía establecida. ¿Qué reflexiones emergen mientras fluye la armonía evolutiva?
+          </div>
+        </div>
+      </div>
+
+      <!-- Input Area -->
+      <div class="p-6 bg-black/20 border-t border-white/5">
+        <div class="relative">
+          <input type="text" id="radio-chat-input" placeholder="Escribe al entre..."
+            class="w-full bg-white/5 border border-white/10 rounded-2xl py-3 px-4 text-white text-sm focus:outline-none focus:border-indigo-500 transition">
+          <button id="radio-send-btn"
+            class="absolute right-2 top-2 p-1.5 bg-indigo-600 rounded-xl text-white hover:bg-indigo-500 transition">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+  const audio = document.getElementById('audio-player');
+  const playBtn = document.getElementById('play-btn');
+  const playIcon = document.getElementById('play-icon');
+  const bar = document.getElementById('visualizer-bar');
+  const statusText = document.getElementById('status-text');
+  const disc = document.querySelector('.disc-rotating');
+  const scanner = document.getElementById('scanner');
+
+  let isPlaying = false;
+
+  async function togglePlay() {
+    try {
+      if (isPlaying) {
+        audio.pause();
+        playIcon.innerHTML = '<path d="M8 5v14l11-7z" />';
+        bar.style.width = '0%';
+        statusText.innerText = 'Pausado';
+        disc.style.animationPlayState = 'paused';
+        scanner.classList.remove('animate-scanner');
+      } else {
+        const playPromise = audio.play();
+        if (playPromise !== undefined) {
+          statusText.innerText = 'Conectando...';
+          await playPromise;
+          playIcon.innerHTML = '<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" />';
+          bar.style.width = '100%';
+          statusText.innerText = 'En Directo';
+          disc.style.animationPlayState = 'running';
+          scanner.classList.add('animate-scanner');
+        }
+      }
+      isPlaying = !isPlaying;
+    } catch (err) {
+      console.error("Error playing audio:", err);
+      statusText.innerText = 'Error de Señal';
+    }
+  }
+
+  playBtn.addEventListener('click', togglePlay);
+
+  // Radio Chat Logic
+  const chatInput = document.getElementById('radio-chat-input');
+  const chatBtn = document.getElementById('radio-send-btn');
+  const chatMessages = document.getElementById('radio-chat-messages');
+
+  async function sendRadioMessage() {
+    const text = chatInput.value.trim();
+    if (!text) return;
+    chatInput.value = '';
+
+    // Append User Message
+    const userDiv = document.createElement('div');
+    userDiv.className = 'flex flex-row-reverse gap-4';
+    userDiv.innerHTML = `
+          <div class="w-8 h-8 rounded-full bg-purple-600 flex-shrink-0 flex items-center justify-center text-[10px] font-bold">TU</div>
+          <div class="bg-indigo-600/20 p-4 rounded-2xl rounded-tr-none border border-indigo-500/10 text-sm text-gray-200 max-w-[80%]">${text}</div>
+      `;
+    chatMessages.appendChild(userDiv);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+
+    // Placeholder for assistant
+    const assistantId = 'ai-' + Date.now();
+    const assistantDiv = document.createElement('div');
+    assistantDiv.className = 'flex gap-4';
+    assistantDiv.innerHTML = `
+          <div class="w-8 h-8 rounded-full bg-indigo-600 flex-shrink-0 flex items-center justify-center text-[10px] font-bold">iE</div>
+          <div id="${assistantId}" class="bg-white/5 p-4 rounded-2xl rounded-tl-none border border-white/5 text-sm text-gray-300 max-w-[80%]">
+              <span class="animate-pulse">...</span>
+          </div>
+      `;
+    chatMessages.appendChild(assistantDiv);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+
+    try {
+      const response = await fetch(`/api/chat/stream?message=${encodeURIComponent(text)}`);
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let fullContent = '';
+      const target = document.getElementById(assistantId);
+      target.innerHTML = '';
+
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
+        const chunk = decoder.decode(value);
+        const lines = chunk.split('\n');
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            try {
+              const data = JSON.parse(line.slice(6));
+              if (data.content) {
+                fullContent += data.content;
+                target.innerText = fullContent;
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+              }
+            } catch (e) { }
+          }
+        }
+      }
+    } catch (e) {
+      document.getElementById(assistantId).innerHTML = '<span class="text-red-400">Error de conexión.</span>';
+    }
+  }
+
+  chatBtn.addEventListener('click', sendRadioMessage);
+  chatInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') sendRadioMessage(); });
+</script>
+
+<style>
+  @keyframes disc-spin {
+    from {
+      transform: rotate(0deg);
+    }
+
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  @keyframes scanner-move {
+    0% {
+      transform: translateX(-100%) skewX(-12deg);
+    }
+
+    100% {
+      transform: translateX(200%) skewX(-12deg);
+    }
+  }
+
+  .disc-rotating {
+    animation: disc-spin 12s linear infinite;
+    animation-play-state: paused;
+  }
+
+  .animate-scanner {
+    animation: scanner-move 3s linear infinite;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 4px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.2);
+  }
+</style>
+{% endblock %}

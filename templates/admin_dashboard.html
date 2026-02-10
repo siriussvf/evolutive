@@ -1,0 +1,171 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mx-auto py-10 max-w-6xl">
+    <div class="flex justify-between items-center mb-10">
+        <h1 class="text-4xl font-bold text-white">Panel de Control</h1>
+        <div class="bg-indigo-900/50 px-4 py-2 rounded-full border border-indigo-500/30">
+            <span class="text-indigo-300">Admin:</span> <span class="text-white font-semibold">{{ current_user.username
+                }}</span>
+        </div>
+    </div>
+
+    <!-- Grid Layout -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+
+        <!-- iE Control Center (Technical Settings) -->
+        <div class="glass-panel p-8 rounded-2xl border border-indigo-500/20">
+            <h2 class="text-2xl font-bold text-cyan-400 mb-6 flex items-center gap-2">
+                <span>🤖</span> iE Control Center
+            </h2>
+            <div class="space-y-6">
+                <form action="/admin/ai-config/update" method="POST" class="bg-black/20 p-4 rounded-xl">
+                    <label class="block text-sm text-gray-400 mb-2">Modelo Activo (LM Studio)</label>
+                    <input type="hidden" name="key" value="active_model">
+                    <input type="text" name="value" value="{{ ai_config.get('active_model', 'qwen2.5-7b-instruct') }}"
+                        class="w-full bg-gray-900 border border-gray-700 rounded p-2 text-white outline-none">
+                    <button
+                        class="mt-2 text-xs text-cyan-400 hover:text-white uppercase font-bold tracking-wider">Actualizar</button>
+                </form>
+
+                <form action="/admin/ai-config/update" method="POST" class="bg-black/20 p-4 rounded-xl">
+                    <label class="block text-sm text-gray-400 mb-2">Voz Predeterminada (TTS)</label>
+                    <input type="hidden" name="key" value="default_voice">
+                    <select name="value"
+                        class="w-full bg-gray-900 border border-gray-700 rounded p-2 text-white outline-none">
+                        <option value="nova" {{ 'selected' if ai_config.get('default_voice')=='nova' }}>Nova
+                            (Cristalina)</option>
+                        <option value="onyx" {{ 'selected' if ai_config.get('default_voice')=='onyx' }}>Onyx (Profunda)
+                        </option>
+                        <option value="echo" {{ 'selected' if ai_config.get('default_voice')=='echo' }}>Echo (Neutral)
+                        </option>
+                    </select>
+                    <button
+                        class="mt-2 text-xs text-cyan-400 hover:text-white uppercase font-bold tracking-wider">Guardar</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- iEpodcast Manager -->
+        <div class="glass-panel p-8 rounded-2xl border border-purple-500/20">
+            <h2 class="text-2xl font-bold text-purple-400 mb-6 flex items-center gap-2">
+                <span>🎙️</span> iEpodcast Manager
+            </h2>
+            <form action="/admin/podcast/add" method="POST" enctype="multipart/form-data" class="space-y-4">
+                <input type="text" name="title" placeholder="Título del Episodio" required
+                    class="w-full bg-gray-900 border border-gray-700 rounded p-2 text-white">
+                <textarea name="description" placeholder="Descripción corta"
+                    class="w-full bg-gray-900 border border-gray-700 rounded p-2 text-white"></textarea>
+                <div class="flex flex-col gap-2">
+                    <label class="text-xs text-gray-500">Archivo de Audio (mp3/wav)</label>
+                    <input type="file" name="audio" accept="audio/*" required class="text-xs text-gray-400">
+                </div>
+                <button type="submit"
+                    class="w-full bg-purple-600 hover:bg-purple-500 text-white font-bold py-2 rounded transition shadow-lg shadow-purple-900/40">Subir
+                    Episodio</button>
+            </form>
+        </div>
+
+        <!-- Configuración General -->
+        <div class="glass-panel p-8 rounded-2xl">
+            <h2 class="text-2xl font-bold text-indigo-300 mb-6 flex items-center gap-2">
+                <span>⚙️</span> Configuración del Sitio
+            </h2>
+
+            <div class="space-y-6">
+                <!-- Hero Title -->
+                <form action="/admin/config/update" method="POST" class="bg-black/20 p-4 rounded-xl">
+                    <label class="block text-sm text-gray-400 mb-2">Título Principal (Hero)</label>
+                    <input type="hidden" name="key" value="hero_title">
+                    <input type="text" name="value" value="{{ site_config.get('hero_title', '') }}"
+                        class="w-full bg-gray-900 border border-gray-700 rounded p-2 text-white focus:border-indigo-500 outline-none transition">
+                    <button
+                        class="mt-2 text-xs text-indigo-400 hover:text-white uppercase font-bold tracking-wider">Guardar</button>
+                </form>
+
+                <!-- Hero Subtitle -->
+                <form action="/admin/config/update" method="POST" class="bg-black/20 p-4 rounded-xl">
+                    <label class="block text-sm text-gray-400 mb-2">Subtítulo</label>
+                    <input type="hidden" name="key" value="hero_subtitle">
+                    <textarea name="value" rows="2"
+                        class="w-full bg-gray-900 border border-gray-700 rounded p-2 text-white focus:border-indigo-500 outline-none transition">{{ site_config.get('hero_subtitle', '') }}</textarea>
+                    <button
+                        class="mt-2 text-xs text-indigo-400 hover:text-white uppercase font-bold tracking-wider">Guardar</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- iEradio Manager -->
+        <div class="glass-panel p-8 rounded-2xl">
+            <h2 class="text-2xl font-bold text-pink-300 mb-6 flex items-center gap-2">
+                <span>📻</span> iEradio & Streaming
+            </h2>
+
+            <div class="mb-6">
+                <h3 class="text-sm font-semibold text-gray-400 mb-4">Estaciones Activas</h3>
+                {% if radio_stations %}
+                <ul class="space-y-3">
+                    {% for station in radio_stations %}
+                    <li class="flex justify-between items-center bg-black/20 p-3 rounded-lg border border-white/5">
+                        <span class="text-white">{{ station.name }}</span>
+                        <span
+                            class="w-3 h-3 rounded-full {{ 'bg-green-500' if station.is_active else 'bg-red-500' }}"></span>
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% else %}
+                <p class="text-gray-500 italic">No hay estaciones configuradas.</p>
+                {% endif %}
+            </div>
+
+            <h3 class="text-sm font-semibold text-gray-400 mb-2">Añadir Nueva Estación</h3>
+            <form action="/admin/radio/add" method="POST" class="space-y-3">
+                <input type="text" name="name" placeholder="Nombre de la Radio"
+                    class="w-full bg-gray-900 border border-gray-700 rounded p-2 text-white outline-none">
+                <input type="text" name="url" placeholder="URL del Stream (mp3/m3u8)"
+                    class="w-full bg-gray-900 border border-gray-700 rounded p-2 text-white outline-none">
+                <button type="submit"
+                    class="w-full bg-pink-600 hover:bg-pink-500 text-white font-bold py-2 px-4 rounded transition">Añadir
+                    Estación</button>
+            </form>
+        </div>
+
+        <!-- iEmusic Manager -->
+        <div class="glass-panel p-8 rounded-2xl border border-pink-500/20">
+            <h2 class="text-2xl font-bold text-pink-400 mb-6 flex items-center gap-2">
+                <span>🎵</span> iEmusic Manager
+            </h2>
+            <form action="/admin/music/add" method="POST" enctype="multipart/form-data" class="space-y-4">
+                <input type="text" name="title" placeholder="Título de la Obra Sonora" required
+                    class="w-full bg-gray-900 border border-gray-700 rounded p-2 text-white outline-none">
+                <input type="text" name="artist" placeholder="Explorador / Artista"
+                    class="w-full bg-gray-900 border border-gray-700 rounded p-2 text-white outline-none">
+                <div class="flex flex-col gap-2">
+                    <label class="text-xs text-gray-500">Archivo de Audio (mp3/wav)</label>
+                    <input type="file" name="audio" accept="audio/*" required class="text-xs text-gray-400">
+                </div>
+                <button type="submit"
+                    class="w-full bg-pink-600 hover:bg-pink-500 text-white font-bold py-2 rounded transition shadow-lg shadow-pink-900/40">Subir
+                    Música</button>
+            </form>
+        </div>
+
+        <!-- Noticias Manager -->
+        <div class="glass-panel p-8 rounded-2xl border border-orange-500/20 lg:col-span-2">
+            <h2 class="text-2xl font-bold text-orange-400 mb-6 flex items-center gap-2">
+                <span>📰</span> Gestión de Noticias (Crónicas)
+            </h2>
+            <form action="/admin/news/add" method="POST" class="space-y-4">
+                <input type="text" name="title" placeholder="Título de la Crónica" required
+                    class="w-full bg-gray-900 border border-gray-700 rounded p-2 text-white outline-none">
+                <textarea name="content" placeholder="Contenido de la noticia (soporta HTML básico)" rows="4" required
+                    class="w-full bg-gray-900 border border-gray-700 rounded p-2 text-white outline-none"></textarea>
+                <button type="submit"
+                    class="w-full bg-orange-600 hover:bg-orange-500 text-white font-bold py-2 rounded transition shadow-lg shadow-orange-900/40">Publicar
+                    Crónica</button>
+            </form>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

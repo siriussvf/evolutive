@@ -1,0 +1,954 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chat iE | Inteligencia Evolutiva</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@300;400;600&display=swap"
+    rel="stylesheet">
+  <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #0a0a0a;
+      color: #E2E8F0;
+      overflow: hidden !important;
+      height: 100vh !important;
+      margin: 0 !important;
+      padding: 0 !important;
+    }
+
+    h1,
+    h2,
+    h3,
+    h4,
+    .font-heading {
+      font-family: 'Outfit', sans-serif;
+    }
+
+    ::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: #0f172a;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #475569;
+      border-radius: 3px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: #6366f1;
+    }
+
+    <div class="flex h-screen w-screen overflow-hidden relative bg-[#0a0a0a]">< !-- Lumina Voice Overlay (GPT-style) --><div id="voice-overlay"
+    class="fixed inset-0 bg-black/40 backdrop-blur-md z-[9999] flex items-center justify-center transition-all duration-500 opacity-0 pointer-events-none"><div id="voice-card"
+    class="relative w-full max-w-xl bg-[#0a0a0a]/90 backdrop-blur-3xl border border-white/10 rounded-[3rem] p-12 flex flex-col items-center shadow-[0_50px_100px_-20px_rgba(0,0,0,1)] transition-all duration-500"><div class="absolute top-8 right-8 flex gap-4"><button id="toggle-split-btn" class="p-2 text-white/30 hover:text-white transition-all bg-white/5 rounded-full"
+    title="Vista Dividida"><svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+    d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z" /></svg></button><button id="close-voice-btn" class="p-2 text-white/30 hover:text-white transition-all bg-white/5 rounded-full"><svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg></button></div>< !-- The Orb --><div class="relative w-48 h-48 flex items-center justify-center"><div id="voice-orb"
+    class="absolute inset-0 bg-gradient-to-tr from-indigo-500 via-purple-600 to-cyan-400 rounded-full blur-3xl opacity-20 animate-pulse-slow"></div><div id="voice-rings"
+    class="relative w-36 h-36 rounded-full border border-white/10 flex items-center justify-center"><div class="w-24 h-24 rounded-full bg-gradient-to-tr from-indigo-600 to-purple-700 shadow-[0_0_50px_rgba(79,70,229,0.4)] flex items-center justify-center"><div id="orb-inner" class="w-8 h-8 rounded-full bg-white/10 backdrop-blur-sm animate-ping"></div></div></div></div><div class="mt-8 text-center flex flex-col items-center"><h2 id="voice-status" class="text-lg font-bold text-white/50 tracking-[0.2em] uppercase mb-4">Conectando...</h2><div class="min-h-[4rem] flex items-center justify-center"><p id="voice-transcript-live" class="text-indigo-200 text-xl font-medium italic text-center leading-relaxed"></p></div></div><div class="mt-8 flex items-center gap-6"><button id="voice-mute-btn"
+    class="p-4 bg-white/5 hover:bg-white/10 rounded-full text-white/40 transition-all flex items-center justify-center group"
+    title="Silenciar Micrófono"><svg id="mute-icon" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+
+    d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" /></svg></button><div class="flex flex-col items-center gap-1 opacity-20"><div class="w-0.5 h-6 bg-indigo-500 rounded-full animate-bounce"></div><span class="text-[8px] tracking-widest uppercase font-black">Lumina</span></div></div></div></div><style>@keyframes pulse-slow {
+
+      0%,
+      100% {
+        transform: scale(1);
+        opacity: 0.2;
+      }
+
+      50% {
+        transform: scale(1.2);
+        opacity: 0.4;
+      }
+    }
+
+    .animate-pulse-slow {
+      animation: pulse-slow 4s infinite ease-in-out;
+    }
+
+    #voice-overlay.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    #voice-orb.listening {
+      background: linear-gradient(to top right, #4f46e5, #0ea5e9);
+      opacity: 0.5;
+      filter: blur(50px);
+    }
+
+    #voice-orb.thinking {
+      background: linear-gradient(to top right, #9333ea, #db2777);
+      opacity: 0.5;
+      filter: blur(50px);
+      animation: spin 3s infinite linear;
+    }
+
+    #voice-overlay.windowed {
+      background: transparent !important;
+      backdrop-filter: none !important;
+      pointer-events: none !important;
+    }
+
+    #voice-overlay.windowed #voice-card {
+      inset: auto 2rem 2rem auto !important;
+      position: absolute;
+      width: 320px;
+      height: 500px;
+      pointer-events: auto !important;
+      border-radius: 2.5rem;
+      padding: 2rem;
+    }
+
+    #voice-overlay.windowed .w-48 {
+      width: 8rem;
+      height: 8rem;
+    }
+
+    #voice-overlay.windowed #voice-status {
+      font-size: 0.875rem;
+      margin-bottom: 0.5rem;
+    }
+
+    #voice-overlay.windowed #voice-transcript-live {
+      font-size: 1rem;
+    }
+
+    #voice-overlay.windowed .top-8 {
+      top: 1.5rem;
+      right: 1.5rem;
+    }
+
+    #voice-overlay.windowed .bottom-12 {
+      bottom: 2rem;
+    }
+
+    @keyframes spin {
+      from {
+        transform: rotate(0deg) scale(1.1);
+      }
+
+      to {
+        transform: rotate(360deg) scale(1.1);
+      }
+    }
+
+    .mute-active {
+      color: #ef4444 !important;
+      background: rgba(239, 68, 68, 0.1) !important;
+    }
+
+    /* Compactness Refinements */
+    .message-bubble {
+      font-size: 0.95rem !important;
+      line-height: 1.5 !important;
+      padding-top: 0.5rem !important;
+      padding-bottom: 0.5rem !important;
+      padding-left: 1rem !important;
+      padding-right: 1rem !important;
+    }
+
+    .suggestion-btn {
+      padding: 0.75rem !important;
+    }
+
+    .suggestion-btn div:first-child {
+      font-size: 1.25rem !important;
+      margin-bottom: 0.25rem !important;
+    }
+
+    .suggestion-btn .font-bold {
+      font-size: 0.8rem !important;
+    }
+
+    .suggestion-btn .text-\[10px\] {
+      font-size: 9px !important;
+    }
+  </style>
+
+  <!-- Sidebar - Perplexity Style -->
+  <aside
+    class="w-16 md:w-64 flex-shrink-0 flex flex-col items-center md:items-stretch border-r border-white/5 bg-black/20 backdrop-blur-md pt-6 transition-all duration-300">
+    <div id="new-chat-sidebar-btn"
+      class="mb-8 px-4 flex items-center justify-center md:justify-start gap-3 cursor-pointer hover:opacity-80 transition-all">
+      <div
+        class="w-8 h-8 rounded-full bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center shadow-lg shadow-cyan-500/20">
+        <svg class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+        </svg>
+      </div>
+      <span class="hidden md:block font-bold text-lg tracking-tight text-white/90">Nuevo Chat</span>
+    </div>
+
+    <!-- Conversations List -->
+    <div class="flex-1 overflow-y-auto px-2 py-4 space-y-1 custom-scrollbar">
+      <div class="text-[10px] text-gray-500 uppercase font-bold px-3 mb-2 tracking-widest">Conversaciones</div>
+      <div id="chat-sessions-list" class="space-y-1">
+        <!-- Sessions dynamic load -->
+      </div>
+    </div>
+
+    <div class="h-px bg-white/5 my-2 mx-2"></div>
+
+    <nav class="flex-1 space-y-2 px-2">
+      <a href="/"
+        class="flex items-center gap-3 px-3 py-2 text-gray-400 hover:text-indigo-300 hover:bg-white/5 rounded-lg transition-all group">
+        <svg class="w-5 h-5 group-hover:text-cyan-400 transition" fill="none" viewBox="0 0 24 24">
+          <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+        </svg>
+        <span class="hidden md:block font-medium">Descubrir</span>
+      </a>
+      <a href="/biblioteca"
+        class="flex items-center gap-3 px-3 py-2 text-gray-400 hover:text-indigo-300 hover:bg-white/5 rounded-lg transition-all">
+        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24">
+          <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10">
+          </path>
+        </svg>
+        <span class="hidden md:block">Archivo</span>
+      </a>
+      <a href="/noticias"
+        class="flex items-center gap-3 px-3 py-2 text-gray-400 hover:text-indigo-300 hover:bg-white/5 rounded-lg transition-all">
+        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24">
+          <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+        </svg>
+        <span class="hidden md:block">Crónicas</span>
+      </a>
+      <a href="/settings"
+        class="flex items-center gap-3 px-3 py-2 text-gray-400 hover:text-indigo-300 hover:bg-white/5 rounded-lg transition-all">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+        </svg>
+        <span class="hidden md:block">Personalización</span>
+      </a>
+    </nav>
+
+    <div class="p-4 border-t border-white/5">
+      <div class="text-xs text-gray-500 text-center md:text-left">
+        <p class="hidden md:block">Modelo: <span class="text-green-400">Qwen 2.5 (Local)</span></p>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main Chat Area -->
+  <div class="flex-1 flex flex-col relative bg-[#111] overflow-hidden">
+
+    <!-- Background Gradient (Subtle) -->
+    <div class="absolute inset-0 bg-gradient-to-b from-[#1a1a1a] to-[#0a0a0a] pointer-events-none"></div>
+
+    <!-- Dynamic Content Area -->
+    <div class="flex-1 overflow-hidden relative flex flex-col pt-4">
+      <!-- Messages Area (Initially Hidden) -->
+      <div id="messages-container"
+        class="flex-1 overflow-y-auto p-4 md:p-6 scroll-smooth space-y-4 opacity-0 pointer-events-none transition-opacity duration-700 z-10"
+        style="padding-bottom: 12rem !important;">
+        <!-- Dynamic Messages will go here -->
+      </div>
+
+      <!-- Center Stage (Home State Overlay) -->
+      <div id="center-stage"
+        class="absolute inset-x-0 top-1/2 -translate-y-1/2 flex flex-col items-center justify-center p-6 transition-all duration-700 z-20">
+        <div class="mb-8 text-center animate-fade-in-up">
+          <h1 class="text-4xl md:text-6xl font-bold text-white mb-4 tracking-tight">¿En qué puedo ayudarte?</h1>
+        </div>
+
+        <div id="suggestions-grid"
+          class="w-full max-w-4xl grid grid-cols-2 md:grid-cols-4 gap-4 animate-fade-in-up delay-200 px-6">
+          <button
+            class="suggestion-btn p-5 bg-[#1a1a1a] border border-white/5 rounded-2xl hover:bg-[#252525] transition-all text-left group shadow-lg">
+            <div class="text-2xl mb-3">📗</div>
+            <div class="text-sm font-bold text-white mb-1">Estudiar y aprender</div>
+            <div class="text-[10px] text-gray-500 leading-tight">Repaso rápido y dudas para tu evolución.</div>
+          </button>
+          <button
+            class="suggestion-btn p-5 bg-[#1a1a1a] border border-white/5 rounded-2xl hover:bg-[#252525] transition-all text-left group shadow-lg">
+            <div class="text-2xl mb-3">🤗</div>
+            <div class="text-sm font-bold text-white mb-1">Hugging Face</div>
+            <div class="text-[10px] text-gray-500 leading-tight">Explorar modelos y redes neuronales.</div>
+          </button>
+          <button
+            class="suggestion-btn p-5 bg-[#1a1a1a] border border-white/5 rounded-2xl hover:bg-[#252525] transition-all text-left group shadow-lg">
+            <div class="text-2xl mb-3">📝</div>
+            <div class="text-sm font-bold text-white mb-1">Tu año con iE</div>
+            <div class="text-[10px] text-gray-500 leading-tight">Resumen de hitos y co-creaciones.</div>
+          </button>
+          <button
+            class="suggestion-btn p-5 bg-[#1a1a1a] border border-white/5 rounded-2xl hover:bg-[#252525] transition-all text-left group shadow-lg">
+            <div class="text-2xl mb-3">🚀</div>
+            <div class="text-sm font-bold text-white mb-1">Explorar aplicaciones</div>
+            <div class="text-[10px] text-gray-500 leading-tight">Nuevas herramientas y horizontes.</div>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Input Area (Persistent but moves) -->
+    <div id="input-dock"
+      class="absolute inset-x-0 bottom-0 p-6 z-30 transition-all duration-700 flex flex-col items-center bg-gradient-to-t from-[#111] via-[#111]/90 to-transparent backdrop-blur-sm">
+      <!-- Main Input Search Bar -->
+      <div id="search-wrapper" class="w-full max-w-3xl relative">
+        <div
+          class="relative bg-[#222] rounded-[2.5rem] border border-white/5 p-2 shadow-2xl flex items-center transition-all focus-within:bg-[#2a2a2a] focus-within:border-white/10">
+          <!-- Plus Menu Button -->
+          <button id="add-btn"
+            class="p-3 text-gray-400 hover:text-white rounded-full transition-all hover:bg-white/5 ml-1">
+            <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+            </svg>
+          </button>
+
+          <!-- Input Field -->
+          <textarea id="user-input" rows="1"
+            class="flex-1 bg-transparent text-white text-xl placeholder-gray-500 px-4 py-3 resize-none outline-none max-h-40 overflow-hidden leading-relaxed"
+            placeholder="Pregunta lo que quieras"></textarea>
+
+          <div class="flex items-center gap-1 pr-2">
+            <!-- Settings Gear -->
+            <a href="/settings" class="p-3 text-gray-500 hover:text-white rounded-full transition-all hover:bg-white/5"
+              title="Personalización">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+            </a>
+
+            <!-- Mic Button -->
+            <button id="record-btn" class="p-3 text-gray-400 hover:text-white rounded-full transition-all">
+              <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+              </svg>
+            </button>
+
+            <!-- Purple Real-Time Voice Button -->
+            <button id="voice-mode-btn"
+              class="w-12 h-12 bg-[#6a5acd] text-white rounded-full flex items-center justify-center shadow-lg shadow-purple-500/30 hover:scale-110 active:scale-95 transition-all">
+              <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                <path
+                  d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z" />
+                <path d="M7 11h2v1H7zm4 0h2v1h-2zm4 0h2v1h-2z" class="animate-pulse" />
+              </svg>
+            </button>
+
+            <!-- Send Hidden Button -->
+            <button id="send-btn" class="hidden"></button>
+          </div>
+        </div>
+
+        <!-- Add Menu (Popdown) remains same -->
+        <div id="add-menu"
+          class="absolute left-0 bottom-full mb-4 w-64 bg-[#2a2a2a] rounded-2xl border border-white/5 shadow-4xl p-2 hidden z-50 animate-fade-in-up">
+          <button
+            class="w-full text-left px-4 py-3 text-gray-300 hover:bg-white/5 rounded-xl transition flex items-center gap-3">
+            <span class="text-xl">📎</span> Añadir fotos y archivos
+          </button>
+          <button
+            class="w-full text-left px-4 py-3 text-gray-300 hover:bg-white/5 rounded-xl transition flex items-center gap-3">
+            <span class="text-xl">🎨</span> Crea una imagen
+          </button>
+          <button id="search-toggle-btn"
+            class="w-full text-left px-4 py-3 text-gray-300 hover:bg-white/10 rounded-xl transition flex items-center justify-between group">
+            <div class="flex items-center gap-3">
+              <span class="text-xl">🌐</span> Búsqueda en Internet
+            </div>
+            <div id="search-indicator" class="w-3 h-3 rounded-full bg-gray-600 transition-colors"></div>
+          </button>
+          <button
+            class="w-full text-left px-4 py-3 text-gray-300 hover:bg-white/5 rounded-xl transition flex items-center gap-3">
+            <span class="text-xl">🔬</span> Investigación avanzada
+          </button>
+          <div class="h-px bg-white/5 my-2 mx-2"></div>
+          <button
+            class="w-full text-left px-4 py-3 text-gray-300 hover:bg-white/5 rounded-xl transition flex items-center gap-3">
+            <span class="text-xl">📂</span> Más
+          </button>
+        </div>
+      </div>
+
+      <!-- Search Context Indicators -->
+      <div id="search-chip"
+        class="hidden mt-4 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 px-3 py-1 rounded-full text-[10px] font-mono animate-pulse uppercase tracking-wider">
+        SISTEMA DE BÚSQUEDA ACTIVO
+      </div>
+
+      <div class="mt-2 text-[10px] text-gray-600 font-light">
+        iEvolutiva puede cometer errores. Considera verificar la información importante.
+      </div>
+    </div>
+  </div>
+  </div>
+
+  <script>
+    const centerStage = document.getElementById('center-stage');
+    const messagesContainer = document.getElementById('messages-container');
+    const input = document.getElementById('user-input');
+    const sendBtn = document.getElementById('send-btn');
+    const recordBtn = document.getElementById('record-btn');
+    const addBtn = document.getElementById('add-btn');
+    const addMenu = document.getElementById('add-menu');
+    const searchToggle = document.getElementById('search-toggle-btn');
+    const searchIndicator = document.getElementById('search-indicator');
+    const searchChip = document.getElementById('search-chip');
+    const voiceModeBtn = document.getElementById('voice-mode-btn');
+
+    const voiceOverlay = document.getElementById('voice-overlay');
+    const closeVoiceBtn = document.getElementById('close-voice-btn');
+    const toggleSplitBtn = document.getElementById('toggle-split-btn');
+    const voiceMuteBtn = document.getElementById('voice-mute-btn');
+    const muteIcon = document.getElementById('mute-icon');
+    const voiceStatus = document.getElementById('voice-status');
+    const voiceOrb = document.getElementById('voice-orb');
+    const voiceTranscriptLive = document.getElementById('voice-transcript-live');
+
+    let isFirstMessage = true;
+    let isRecording = false;
+    let isSearchActive = false;
+    let isLuminaMode = false;
+    let isMuted = false;
+    let isWindowed = false;
+    let mediaRecorder;
+    let audioChunks = [];
+    let currentSessionId = null;
+
+    // VAD & Recording state
+    let audioContext;
+    let analyser;
+    let silenceStart = null;
+    const SILENCE_THRESHOLD = 0.007; // Slightly more sensitive for local envs
+    const SILENCE_DURATION = 5000;
+    let isPlayingAudio = false;
+    let currentAIResponseAudio = null;
+
+    async function getAudioContext() {
+      if (!audioContext) {
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if (audioContext.state === 'suspended') {
+        await audioContext.resume();
+      }
+      return audioContext;
+    }
+
+    // UI Toggles
+    addBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      addMenu.classList.toggle('hidden');
+    });
+
+    window.addEventListener('click', () => {
+      addMenu.classList.add('hidden');
+    });
+
+    searchToggle.addEventListener('click', (e) => {
+      e.stopPropagation();
+      isSearchActive = !isSearchActive;
+      searchIndicator.classList.toggle('bg-emerald-500', isSearchActive);
+      searchIndicator.classList.toggle('bg-gray-600', !isSearchActive);
+      searchChip.classList.toggle('hidden', !isSearchActive);
+    });
+
+    // Session Management
+    async function loadSessions() {
+      try {
+        const res = await fetch('/api/chats');
+        const sessions = await res.json();
+        const list = document.getElementById('chat-sessions-list');
+        list.innerHTML = '';
+
+        sessions.forEach(s => {
+          const div = document.createElement('div');
+          div.className = `flex items-center gap-3 px-3 py-2 text-gray-400 hover:text-white hover:bg-white/5 rounded-lg cursor-pointer transition group ${currentSessionId == s.id ? 'bg-white/10 text-white' : ''}`;
+          div.innerHTML = `
+          <svg class="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/></svg>
+          <span class="text-sm truncate flex-1">${s.title}</span>
+        `;
+          div.onclick = () => loadChatSession(s.id);
+          list.appendChild(div);
+        });
+      } catch (e) { console.error("Error loading sessions:", e); }
+    }
+
+    async function loadChatSession(id) {
+      currentSessionId = id;
+      try {
+        const res = await fetch(`/api/chats/${id}`);
+        const data = await res.json();
+
+        transitionToChatMode();
+        messagesContainer.innerHTML = '';
+        data.messages.forEach(m => {
+          if (m.role === 'user') appendMessage('user', m.content);
+          else {
+            const mid = appendStreamingMessage();
+            const panel = document.getElementById(mid).querySelector('.streaming-content');
+            panel.innerHTML = formatText(m.content);
+            finalizeMessage(mid, m.content);
+          }
+        });
+        loadSessions(); // Highlight active
+      } catch (e) { console.error("Error loading chat:", e); }
+    }
+
+    document.getElementById('new-chat-sidebar-btn').onclick = () => {
+      currentSessionId = null;
+      messagesContainer.innerHTML = '';
+      transitionToHomeMode();
+      loadSessions();
+    };
+
+    function transitionToHomeMode() {
+      centerStage.classList.remove('opacity-0', 'pointer-events-none', '-translate-y-full');
+      messagesContainer.classList.add('opacity-0', 'pointer-events-none');
+      isFirstMessage = true;
+    }
+
+    // Auto-resize textarea
+    input.addEventListener('input', function () {
+      this.style.height = 'auto';
+      this.style.height = (this.scrollHeight) + 'px';
+    });
+
+    // Enter to send
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        sendMessage();
+      }
+    });
+
+    async function sendMessage() {
+      const text = input.value.trim();
+      if (!text) return;
+
+      transitionToChatMode();
+      appendMessage('user', text);
+      input.value = '';
+      input.style.height = 'auto';
+
+      const messageId = appendStreamingMessage();
+      const messagePanel = document.getElementById(messageId).querySelector('.streaming-content');
+
+      const startTime = Date.now();
+      let tokenCount = 0;
+
+      try {
+        // Use fetch for streaming with session support
+        const url = `/api/chat/stream?message=${encodeURIComponent(text)}&search=${isSearchActive}${currentSessionId ? `&session_id=${currentSessionId}` : ''}`;
+        const response = await fetch(url);
+
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let fullContent = "";
+
+        while (true) {
+          const { value, done } = await reader.read();
+          if (done) break;
+
+          const chunk = decoder.decode(value);
+          const lines = chunk.split('\n');
+
+          for (const line of lines) {
+            if (line.startsWith('data: ')) {
+              const data = JSON.parse(line.slice(6));
+              if (data.session_id && !currentSessionId) {
+                currentSessionId = data.session_id;
+                loadSessions(); // Update sidebar list
+              }
+              if (data.content) {
+                fullContent += data.content;
+                tokenCount++; // Crude estimation
+                // Real-time update
+                messagePanel.innerHTML = formatText(fullContent);
+                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+              } else if (data.error) {
+                messagePanel.innerHTML = `<span class="text-red-400">Error: ${data.error}</span>`;
+              }
+            }
+          }
+        }
+
+        const endTime = Date.now();
+        const latency = endTime - startTime;
+        const tps = tokenCount / (latency / 1000);
+
+        // Finalize message (add copy button, etc.)
+        finalizeMessage(messageId, fullContent);
+
+        // Send Telemetry (Fire and forget)
+        fetch('/api/telemetry', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            model: 'Qwen 2.5 (Local)',
+            latency_ms: latency,
+            tokens_per_sec: tps.toFixed(2)
+          })
+        }).catch(err => console.error("Telemetry error:", err));
+
+      } catch (e) {
+        messagePanel.innerHTML = '<span class="text-red-400">Error de conexión con el núcleo evolutivo.</span>';
+        console.error(e);
+      }
+    }
+
+    function transitionToChatMode() {
+      if (isFirstMessage) {
+        // Background and containers
+        centerStage.classList.add('opacity-0', 'pointer-events-none');
+        messagesContainer.classList.remove('opacity-0', 'pointer-events-none');
+
+        // Move dock to literal bottom
+        const inputDock = document.getElementById('input-dock');
+        inputDock.classList.remove('p-6');
+        inputDock.classList.add('p-4', 'bg-gradient-to-t', 'from-[#0a0a0a]', 'to-transparent');
+
+        isFirstMessage = false;
+      }
+    }
+
+    function appendMessage(role, text, isAudio = false) {
+      const div = document.createElement('div');
+      div.className = `flex gap-4 ${role === 'user' ? 'justify-end' : ''} animate-fade-in-up px-4 md:px-0`;
+
+      if (role === 'user') {
+        const content = isAudio
+          ? `<div class="flex items-center gap-2"><span class="text-lg">🎤</span> <div class="flex flex-col"><span class="text-[9px] text-gray-500 uppercase font-bold">Nota de Voz</span><span class="text-white italic text-sm">"${escapeHtml(text)}"</span></div></div>`
+          : escapeHtml(text);
+        div.innerHTML = `
+                <div class="bg-[#222] text-white rounded-2xl px-4 py-2 max-w-lg border border-white/5 shadow-lg message-bubble">
+                    ${content}
+                </div>
+            `;
+      }
+      messagesContainer.appendChild(div);
+      messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    }
+
+    function appendStreamingMessage() {
+      const id = 'msg-' + Date.now();
+      const div = document.createElement('div');
+      div.id = id;
+      div.className = 'flex gap-5 animate-fade-in-up px-4 md:px-0';
+      div.innerHTML = `
+            <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-indigo-600 to-purple-600 flex-shrink-0 flex items-center justify-center shadow-lg">
+                <span class="text-white font-bold text-[10px]">iE</span>
+            </div>
+            <div class="flex flex-col gap-2 w-full">
+                <div class="font-bold text-[10px] text-indigo-400 uppercase tracking-widest">Respuesta Evolutiva</div>
+                <div class="streaming-content text-gray-200 text-base leading-relaxed max-w-4xl markdown-prose message-bubble">
+                    <span class="inline-block w-1.5 h-4 bg-indigo-500 animate-pulse align-middle"></span>
+                </div>
+                <div class="action-bar hidden flex gap-3 mt-1">
+                    <button class="copy-btn text-[10px] text-gray-500 hover:text-white transition flex items-center gap-1">
+                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg> Copiar
+                    </button>
+                </div>
+            </div>
+        `;
+      messagesContainer.appendChild(div);
+      messagesContainer.scrollTop = messagesContainer.scrollHeight;
+      return id;
+    }
+
+    function finalizeMessage(id, text) {
+      const div = document.getElementById(id);
+      const actionBar = div.querySelector('.action-bar');
+      actionBar.classList.remove('hidden');
+
+      const copyBtn = div.querySelector('.copy-btn');
+      copyBtn.addEventListener('click', () => {
+        navigator.clipboard.writeText(text);
+        const span = copyBtn.querySelector('span') || copyBtn;
+        const old = copyBtn.innerHTML;
+        copyBtn.innerText = '¡Copiado!';
+        setTimeout(() => { copyBtn.innerHTML = old; }, 2000);
+      });
+    }
+
+    function escapeHtml(text) {
+      const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
+      return text.replace(/[&<>"']/g, function (m) { return map[m]; });
+    }
+
+    function formatText(text) {
+      let formatted = text.replace(/\n/g, '<br>');
+      formatted = formatted.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+      formatted = formatted.replace(/```([\s\S]*?)```/g, '<pre class="bg-black/40 p-3 rounded-lg my-3 text-sm font-mono overflow-auto border border-white/5">$1</pre>');
+      return formatted;
+    }
+
+    // Suggestion Handlers
+    document.querySelectorAll('.suggestion-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const title = btn.querySelector('.font-medium').innerText;
+        input.value = `Háblame sobre: ${title}`;
+        sendMessage();
+      });
+    });
+
+    // New Modular Recording Logic
+    async function startRecordingSession() {
+      if (isRecording) return;
+
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        const ctx = await getAudioContext();
+
+        // Initialize VAD
+        const source = ctx.createMediaStreamSource(stream);
+        analyser = ctx.createAnalyser();
+        analyser.fftSize = 256;
+        source.connect(analyser);
+
+        mediaRecorder = new MediaRecorder(stream);
+        audioChunks = [];
+
+        mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+        mediaRecorder.onstop = () => {
+          const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+          if (!isMuted || !isLuminaMode) {
+            sendAudio(audioBlob);
+          }
+          cleanupVAD();
+          stream.getTracks().forEach(track => track.stop());
+        };
+
+        mediaRecorder.start();
+        isRecording = true;
+        recordBtn.classList.add('text-red-500', 'animate-pulse');
+
+        if (isLuminaMode) {
+          voiceStatus.innerText = "Escuchando...";
+          voiceOrb.classList.remove('thinking');
+          voiceOrb.classList.add('listening');
+          voiceOrb.className = "absolute inset-0 bg-gradient-to-tr from-indigo-500 via-purple-600 to-cyan-400 rounded-full blur-3xl opacity-50 animate-pulse";
+        }
+
+        initVADLoop();
+      } catch (err) {
+        console.error("Recording start error:", err);
+        if (isLuminaMode) voiceStatus.innerText = "Error Micrófono";
+      }
+    }
+
+    function stopRecordingSession() {
+      if (!isRecording) return;
+      if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+        mediaRecorder.stop();
+      }
+      isRecording = false;
+      recordBtn.classList.remove('text-red-500', 'animate-pulse');
+
+      if (isLuminaMode) {
+        voiceStatus.innerText = "Procesando...";
+        voiceOrb.className = "absolute inset-0 bg-gradient-to-tr from-purple-600 via-pink-500 to-indigo-500 rounded-full blur-3xl animate-pulse thinking";
+      }
+    }
+
+    function initVADLoop() {
+      const bufferLength = analyser.frequencyBinCount;
+      const dataArray = new Uint8Array(bufferLength);
+      silenceStart = null;
+
+      function checkVAD() {
+        if (!isRecording) return;
+        if (isMuted && isLuminaMode) {
+          silenceStart = null;
+          requestAnimationFrame(checkVAD);
+          return;
+        }
+
+        analyser.getByteTimeDomainData(dataArray);
+        let sum = 0;
+        for (let i = 0; i < bufferLength; i++) {
+          const val = (dataArray[i] - 128) / 128;
+          sum += val * val;
+        }
+        const rms = Math.sqrt(sum / bufferLength);
+
+        // Interruption check
+        if (rms > SILENCE_THRESHOLD * 3 && isPlayingAudio && currentAIResponseAudio) {
+          currentAIResponseAudio.pause();
+          isPlayingAudio = false;
+          voiceStatus.innerText = "Te escucho...";
+        }
+
+        if (rms < SILENCE_THRESHOLD) {
+          if (silenceStart === null) silenceStart = Date.now();
+          else if (Date.now() - silenceStart > SILENCE_DURATION) {
+            playLuminaBeep();
+            stopRecordingSession();
+            return;
+          }
+        } else {
+          silenceStart = null;
+        }
+
+        requestAnimationFrame(checkVAD);
+      }
+      checkVAD();
+    }
+
+    // Voice Interaction
+    voiceModeBtn.addEventListener('click', () => {
+      isLuminaMode = true;
+      voiceOverlay.classList.add('active');
+      voiceStatus.innerText = "Preparando...";
+      voiceOrb.className = "absolute inset-0 bg-gradient-to-tr from-indigo-500 via-purple-600 to-cyan-400 rounded-full blur-3xl opacity-20 animate-pulse-slow";
+
+      // Auto-start recording
+      setTimeout(() => {
+        if (!isRecording) startRecordingSession();
+      }, 500);
+    });
+
+    // NEW: Orb as a Fallback STOP button
+    document.getElementById('voice-rings').addEventListener('click', () => {
+      if (isRecording) {
+        stopRecordingSession();
+      } else if (!isPlayingAudio) {
+        startRecordingSession();
+      }
+    });
+
+    toggleSplitBtn.addEventListener('click', () => {
+      isWindowed = !isWindowed;
+      voiceOverlay.classList.toggle('windowed', isWindowed);
+    });
+
+    closeVoiceBtn.addEventListener('click', () => {
+      isLuminaMode = false;
+      isWindowed = false;
+      voiceOverlay.classList.remove('active', 'windowed');
+      if (isRecording) {
+        mediaRecorder.stop();
+        isRecording = false;
+        recordBtn.classList.remove('text-red-500', 'animate-pulse');
+      }
+      if (currentAIResponseAudio) {
+        currentAIResponseAudio.pause();
+        currentAIResponseAudio = null;
+      }
+    });
+
+    voiceMuteBtn.addEventListener('click', () => {
+      isMuted = !isMuted;
+      voiceMuteBtn.classList.toggle('mute-active', isMuted);
+      muteIcon.innerHTML = isMuted
+        ? `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2" />`
+        : `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />`;
+
+      if (isRecording) {
+        // We handle mute by ignoring VAD levels if muted, or stop recording? 
+        // Better to just not send if muted when silence duration is reached?
+        // Actually, let's just use the mic's mute state if possible, but simpler: 
+        // if muted, silenceStart will always be null? No, silenceStart will be true.
+      }
+    });
+
+    recordBtn.addEventListener('click', () => {
+      if (!isRecording) {
+        startRecordingSession();
+      } else {
+        stopRecordingSession();
+      }
+    });
+
+    function playLuminaBeep() {
+      try {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(880, ctx.currentTime); // A5
+        osc.frequency.exponentialRampToValueAtTime(440, ctx.currentTime + 0.1); // Drop to A4
+
+        gain.gain.setValueAtTime(0.1, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.1);
+
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+
+        osc.start();
+        osc.stop(ctx.currentTime + 0.1);
+      } catch (e) {
+        console.error("Audio beep error:", e);
+      }
+    }
+
+    function cleanupVAD() {
+      if (audioContext) {
+        audioContext.close();
+        audioContext = null;
+      }
+    }
+
+    async function sendAudio(blob) {
+      const formData = new FormData();
+      formData.append("audio", blob, "voice.webm");
+
+      try {
+        const response = await fetch("/process", { method: "POST", body: formData });
+        const data = await response.json();
+
+        if (data.error) {
+          if (isLuminaMode) voiceStatus.innerText = "Error de voz";
+          return;
+        }
+
+        // Display transcription in user bubble
+        appendMessage('user', data.transcript || "Audio", true);
+
+        const messageId = appendStreamingMessage();
+        const messagePanel = document.getElementById(messageId).querySelector('.streaming-content');
+        messagePanel.innerHTML = formatText(data.response);
+        finalizeMessage(messageId, data.response);
+
+        if (isLuminaMode) {
+          voiceStatus.innerText = "iE hablando...";
+          voiceOrb.className = "absolute inset-0 bg-gradient-to-tr from-indigo-500 via-purple-600 to-cyan-400 rounded-full blur-3xl animate-pulse-slow listening";
+          // Show response snippet in overlay
+          voiceTranscriptLive.innerText = data.response.substring(0, 100) + (data.response.length > 100 ? "..." : "");
+        }
+
+        if (data.audio_url) {
+          currentAIResponseAudio = new Audio(data.audio_url);
+          isPlayingAudio = true;
+          currentAIResponseAudio.play();
+          currentAIResponseAudio.onended = () => {
+            isPlayingAudio = false;
+            if (isLuminaMode) {
+              voiceStatus.innerText = "Listo";
+              voiceOrb.className = "absolute inset-0 bg-gradient-to-tr from-indigo-500 via-purple-600 to-cyan-400 rounded-full blur-3xl opacity-20 animate-pulse-slow";
+
+              // Auto-restart listening in Lumina mode (Infinite loop like GPT Live)
+              setTimeout(() => {
+                if (isLuminaMode && !isRecording) startRecordingSession();
+              }, 500);
+            }
+          };
+        }
+      } catch (error) {
+        console.error("Audio processing error:", error);
+      }
+    }
+
+    // Initial Load
+    loadSessions();
+  </script>
+  {% endblock %}

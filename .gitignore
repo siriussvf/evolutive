@@ -1,0 +1,24 @@
+# Python
+venv/
+__pycache__/
+*.py[cod]
+*$py.class
+
+# iE Specific
+tmp_audio/
+piper/
+data/
+logs/
+models/
+whisper.cpp/
+static/uploads/
+*.db
+*.tar.gz
+.DS_Store
+
+# IDE
+.vscode/
+.idea/
+.gemini/
+.agent/
+.system_generated/

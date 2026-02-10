@@ -1,0 +1,1401 @@
+{% extends "base.html" %}
+
+{% block content %}
+<style>
+  /* Sovereign Viewport: Global Overrides */
+  footer,
+  .orb {
+    display: none !important;
+  }
+
+  main {
+    padding-top: 5rem !important;
+    /* Space for navbar */
+    max-width: none !important;
+    margin: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+  }
+
+  body {
+    overflow: hidden !important;
+    background: #0d0d0d !important;
+    font-family: 'Inter', 'Outfit', sans-serif;
+    color: #ececec;
+  }
+
+  /* Custom Scrollbar */
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #333;
+    border-radius: 10px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #444;
+  }
+
+  /* Sidebar Styles */
+  .sidebar-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.6rem 0.75rem;
+    color: #ececec;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 0.875rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .sidebar-item:hover {
+    background: #202123;
+  }
+
+  .sidebar-item.active {
+    background: #202123;
+  }
+
+  .sidebar-section-title {
+    font-size: 0.7rem;
+    color: #8e8ea0;
+    text-transform: uppercase;
+    font-weight: 700;
+    padding: 1.5rem 0.75rem 0.5rem;
+    letter-spacing: 0.05em;
+  }
+
+  /* Center Stage */
+  #center-stage.hidden {
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(-20px);
+  }
+
+  .suggestion-card {
+    background: #1a1a1a;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 1rem;
+    padding: 1.25rem;
+    text-align: left;
+    transition: all 0.3s;
+    cursor: pointer;
+    box-shadow: 0 4px 20px -5px rgba(0, 0, 0, 0.5);
+  }
+
+  .suggestion-card:hover {
+    background: #252525;
+    border-color: rgba(255, 255, 255, 0.1);
+    transform: translateY(-2px);
+  }
+
+  /* Input Dock */
+  #input-dock {
+    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* Orb Animation */
+  @keyframes orb-pulse {
+    0% {
+      transform: scale(1);
+      opacity: 0.5;
+      filter: blur(20px);
+    }
+
+    50% {
+      transform: scale(1.1);
+      opacity: 0.8;
+      filter: blur(30px);
+    }
+
+    100% {
+      transform: scale(1);
+      opacity: 0.5;
+      filter: blur(20px);
+    }
+  }
+
+  .orb-active {
+    animation: orb-pulse 2s infinite ease-in-out;
+  }
+
+  /* Markdown Tweaks */
+  .markdown-prose {
+    font-size: 1.1rem;
+    line-height: 1.7;
+    color: #d1d1d1;
+  }
+
+  .markdown-prose strong {
+    color: #fff;
+    font-weight: 600;
+  }
+
+  .markdown-prose h1,
+  .markdown-prose h2 {
+    color: #fff;
+    margin-top: 1.5rem;
+    margin-bottom: 0.5rem;
+    font-weight: 700;
+  }
+
+  .markdown-prose code {
+    background: rgba(255, 255, 255, 0.1);
+    padding: 0.2rem 0.4rem;
+    border-radius: 0.25rem;
+    font-family: monospace;
+    font-size: 0.9em;
+  }
+
+  /* Scaling & Auto-adjustment for Large Screens */
+  @media (min-width: 1600px) {
+    :root {
+      font-size: 18px;
+    }
+
+    #search-wrapper {
+      max-width: 1000px !important;
+    }
+
+    .suggestion-card {
+      padding: 2rem !important;
+    }
+
+    .suggestion-card .text-2xl {
+      font-size: 2.5rem !important;
+    }
+
+    #center-stage h1 {
+      font-size: 3.5rem !important;
+    }
+  }
+
+  @media (min-width: 2000px) {
+    :root {
+      font-size: 20px;
+    }
+
+    #search-wrapper {
+      max-width: 1200px !important;
+    }
+  }
+
+  /* Split View Modal Essentials */
+  .settings-cat-btn.active {
+    background: rgba(255, 255, 255, 0.05);
+    color: #fff;
+    border-left: 3px solid #6366f1;
+  }
+
+  /* Message Action Bar */
+  .message-actions {
+    opacity: 0;
+    transition: opacity 0.2s ease-in-out;
+  }
+
+  .message-group:hover .message-actions {
+    opacity: 1;
+  }
+
+  .action-btn {
+    padding: 0.375rem;
+    color: #6b7280;
+    border-radius: 0.5rem;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .action-btn:hover {
+    color: #ffffff;
+    background-color: rgba(255, 255, 255, 0.1);
+  }
+
+  /* Evolutionary Audio Controller (Floating Pill) */
+  #audio-controller {
+    position: fixed;
+    bottom: 120px;
+    left: 50%;
+    transform: translateX(-50%) translateY(100px);
+    opacity: 0;
+    pointer-events: none;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    padding: 0.75rem 1.5rem;
+    background: rgba(15, 15, 15, 0.9);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 9999px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+    transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  #audio-controller.active {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+    pointer-events: auto;
+  }
+</style>
+
+<div class="flex h-screen overflow-hidden relative">
+
+  <!-- Lumina Voice Overlay (Functional) -->
+  <div id="voice-overlay"
+    class="fixed inset-0 bg-black/80 backdrop-blur-2xl z-[9999] flex items-center justify-center transition-all duration-700 opacity-0 pointer-events-none">
+
+    <!-- Controls Bar -->
+    <div class="absolute top-10 left-10 right-10 flex justify-between items-center z-[10000]">
+      <button id="toggle-split-btn"
+        class="p-4 bg-white/5 border border-white/10 rounded-2xl text-white/50 hover:text-white transition">
+        <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7" />
+        </svg>
+      </button>
+      <div class="flex gap-4">
+        <button id="voice-mute-btn"
+          class="p-4 bg-white/5 border border-white/10 rounded-2xl text-white/50 hover:text-white transition">
+          <svg id="mute-icon" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+          </svg>
+        </button>
+        <button id="close-voice-btn"
+          class="p-4 bg-red-500/10 border border-red-500/20 rounded-2xl text-red-500 hover:bg-red-500 hover:text-white transition">
+          <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="relative w-full max-w-xl text-center flex flex-col items-center">
+      <!-- The Animated Orb -->
+      <div id="voice-rings" class="relative w-80 h-80 mb-12 flex items-center justify-center cursor-pointer group">
+        <div id="voice-orb"
+          class="absolute inset-0 bg-gradient-to-tr from-indigo-500 via-purple-600 to-cyan-400 rounded-full blur-[80px] opacity-20 transition-all duration-1000 animate-pulse-slow">
+        </div>
+        <div
+          class="relative w-48 h-48 rounded-full bg-gradient-to-tr from-indigo-600 to-purple-700 shadow-[0_0_100px_rgba(79,70,229,0.4)] flex items-center justify-center border border-white/10 overflow-hidden">
+          <div class="absolute inset-0 bg-white/5 group-hover:bg-white/10 transition-colors"></div>
+          <div class="w-16 h-16 rounded-full bg-white/20 animate-ping"></div>
+        </div>
+      </div>
+
+      <div class="space-y-2">
+        <h2 id="voice-status" class="text-3xl font-bold text-white tracking-widest uppercase animate-pulse">Iniciando...
+        </h2>
+        <p id="voice-transcript-live" class="text-indigo-200/60 text-lg font-medium italic px-8 max-w-md mx-auto"></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Sidebar -->
+  <aside class="hidden md:flex w-[260px] flex-shrink-0 flex-col bg-[#000] border-r border-[#222]">
+    <!-- Sidebar Header -->
+    <div class="p-4 flex items-center justify-between">
+      <div class="flex items-center gap-2">
+        <div class="w-8 h-8 rounded-full bg-white flex items-center justify-center shadow-lg">
+          <span class="text-black font-black text-xs">iE</span>
+        </div>
+        <span class="font-bold text-white text-sm">iE Chat</span>
+      </div>
+      <button id="new-chat-top-btn" class="p-2 text-gray-500 hover:text-white transition" title="Nuevo Chat">
+        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path
+            d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+        </svg>
+      </button>
+    </div>
+
+    <!-- Navigation List (History only) -->
+    <div class="flex-1 overflow-y-auto custom-scrollbar px-3 pt-2">
+      <!-- History Section -->
+      <div id="history-section">
+        <div class="sidebar-section-title">Conversaciones</div>
+        <div id="chat-history-list" class="space-y-1 pb-10">
+          <div id="history-loading" class="px-4 py-4 text-center">
+            <div class="animate-pulse text-[10px] text-gray-600 uppercase font-bold">Cargando...</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Ajustes Section (Integrated) -->
+    <div class="sidebar-footer">
+      {% if current_user.is_authenticated %}
+      <button onclick="openSettingsModal()"
+        class="w-full flex items-center justify-between p-3 hover:bg-[#202123] rounded-lg cursor-pointer transition group">
+        <div class="flex items-center gap-3 overflow-hidden">
+          <div
+            class="w-8 h-8 rounded-full bg-gradient-to-tr from-indigo-700 via-indigo-600 to-purple-800 flex items-center justify-center border border-white/10 shadow-lg flex-shrink-0">
+            <span class="text-[10px] font-black text-white">iE</span>
+          </div>
+          <div class="flex flex-col items-start truncate overflow-hidden">
+            <span class="text-xs font-bold text-white uppercase tracking-widest truncate">{{ current_user.nickname or
+              'Personalización' }}</span>
+            <span class="text-[9px] text-gray-500 uppercase tracking-tighter">Ajustes del Sistema</span>
+          </div>
+        </div>
+        <svg class="w-4 h-4 text-gray-600 group-hover:text-white transition-colors" fill="none" viewBox="0 0 24 24"
+          stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+        </svg>
+      </button>
+      {% else %}
+      <div
+        class="p-2 text-center text-[9px] text-gray-600 uppercase font-bold tracking-widest bg-white/5 rounded-xl border border-white/5">
+        Personalización iE
+        <a href="/login"
+          class="block mt-2 text-indigo-400 hover:text-indigo-300 transition underline font-black">ENTRAR</a>
+      </div>
+      {% endif %}
+    </div>
+  </aside>
+
+  <!-- Master Settings Modal (Split View) -->
+  <div id="settings-modal" class="fixed inset-0 z-[10001] hidden overflow-y-auto" role="dialog" aria-modal="true">
+    <div class="flex items-center justify-center min-h-screen p-4 md:p-12 text-center">
+      <div class="fixed inset-0 bg-black/80 backdrop-blur-xl transition-opacity" onclick="closeSettingsModal()"></div>
+
+      <!-- The Window -->
+      <div
+        class="inline-block align-bottom bg-[#0d0d0d] rounded-[2rem] border border-white/10 text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle w-full max-w-5xl h-[80vh] flex flex-col md:flex-row">
+
+        <!-- Modal Sidebar (Categories) -->
+        <aside class="w-full md:w-[260px] bg-[#000] border-r border-white/5 flex flex-col p-6">
+          <h3 class="text-lg font-black text-white uppercase tracking-[0.2em] mb-8 border-b border-white/5 pb-4">Ajustes
+            <span class="text-indigo-500">iE</span>
+          </h3>
+          <nav class="space-y-2 flex-1">
+            <button onclick="showSettingsTab('general')"
+              class="settings-cat-btn flex items-center gap-3 w-full p-3 rounded-xl text-gray-400 hover:bg-white/5 transition active"
+              id="cat-general">
+              <span>⚙️</span> General
+            </button>
+            <button onclick="showSettingsTab('personalization')"
+              class="settings-cat-btn flex items-center gap-3 w-full p-3 rounded-xl text-gray-400 hover:bg-white/5 transition"
+              id="cat-personalization">
+              <span>🧬</span> Identidad
+            </button>
+            <button onclick="showSettingsTab('audio')"
+              class="settings-cat-btn flex items-center gap-3 w-full p-3 rounded-xl text-gray-400 hover:bg-white/5 transition"
+              id="cat-audio">
+              <span>🎙️</span> Voz y Audio
+            </button>
+            <button onclick="showSettingsTab('system')"
+              class="settings-cat-btn flex items-center gap-3 w-full p-3 rounded-xl text-gray-400 hover:bg-white/5 transition"
+              id="cat-system">
+              <span>💻</span> Aplicación
+            </button>
+          </nav>
+          <div class="mt-auto pt-6 border-t border-white/5">
+            <a href="/logout"
+              class="text-[10px] text-red-500/40 hover:text-red-500 uppercase font-black tracking-widest transition">Cerrar
+              Sesión</a>
+          </div>
+        </aside>
+
+        <!-- Modal Content Area -->
+        <main class="flex-1 flex flex-col bg-[#0d0d0d] overflow-hidden p-0 !important">
+          <!-- Header -->
+          <div class="px-10 pt-10 pb-6 flex justify-between items-center flex-shrink-0">
+            <h2 id="settings-tab-title" class="text-2xl font-bold text-white tracking-tight">General</h2>
+            <button onclick="closeSettingsModal()"
+              class="text-gray-500 hover:text-white transition p-2 bg-white/5 rounded-full">
+              <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+
+          <!-- Tabs Content -->
+          <div class="flex-1 overflow-y-auto px-10 pb-10 custom-scrollbar space-y-8">
+
+            <!-- Tab: General -->
+            <div id="tab-general" class="settings-tab active space-y-8">
+              <div class="space-y-4">
+                <h4 class="text-xs font-black text-indigo-400 uppercase tracking-widest">Estilo y Tono Base</h4>
+                <div class="grid grid-cols-2 gap-4">
+                  <label class="relative cursor-pointer group">
+                    <input type="radio" name="response_style_new" value="default" class="sr-only peer"
+                      onchange="updateStyleHidden('default')" {{ 'checked' if current_user.response_style=='default' or
+                      not current_user.response_style }}>
+                    <div
+                      class="p-5 bg-white/5 border border-white/5 rounded-2xl peer-checked:border-indigo-500 peer-checked:bg-indigo-500/10 transition-all">
+                      <div class="font-bold text-white text-sm">Predeterminada</div>
+                      <p class="text-[10px] text-gray-500 mt-1">Equilibrio evolutivo.</p>
+                    </div>
+                  </label>
+                  <label class="relative cursor-pointer group">
+                    <input type="radio" name="response_style_new" value="conciso" class="sr-only peer"
+                      onchange="updateStyleHidden('conciso')" {{ 'checked' if current_user.response_style=='conciso' }}>
+                    <div
+                      class="p-5 bg-white/5 border border-white/5 rounded-2xl peer-checked:border-cyan-500 peer-checked:bg-cyan-500/10 transition-all">
+                      <div class="font-bold text-white text-sm">Conciso</div>
+                      <p class="text-[10px] text-gray-500 mt-1">Directo al grano.</p>
+                    </div>
+                  </label>
+                </div>
+              </div>
+
+              <div class="p-6 bg-white/5 rounded-[2rem] border border-white/5 space-y-4">
+                <div class="flex items-center justify-between">
+                  <div>
+                    <h4 class="text-white font-bold">Memoria Evolutiva</h4>
+                    <p class="text-[10px] text-gray-500">iE aprenderá de tus charlas.</p>
+                  </div>
+                  <label class="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" id="setting-memory" class="sr-only peer" {% if current_user.enable_memory
+                      %}checked{% endif %}>
+                    <div
+                      class="w-11 h-6 bg-white/10 rounded-full peer peer-checked:bg-indigo-600 after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-full">
+                    </div>
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <!-- Tab: Personalization -->
+            <div id="tab-personalization" class="settings-tab hidden space-y-8">
+              <div class="space-y-4">
+                <h4 class="text-xs font-black text-indigo-400 uppercase tracking-widest">Tu Identidad</h4>
+                <div class="space-y-6">
+                  <div>
+                    <label class="block text-[10px] text-gray-500 uppercase font-black mb-2 ml-1">¿Cómo te
+                      llamas?</label>
+                    <input type="text" id="setting-nickname" value="{{ current_user.nickname or '' }}"
+                      class="w-full bg-white/5 border border-white/5 rounded-2xl px-5 py-4 text-white focus:outline-none focus:border-indigo-500/50 transition">
+                  </div>
+                  <div>
+                    <label class="block text-[10px] text-gray-500 uppercase font-black mb-2 ml-1">Instrucciones
+                      Personalizadas (Bio)</label>
+                    <textarea id="setting-context" rows="8"
+                      class="w-full bg-white/5 border border-white/5 rounded-2xl px-5 py-4 text-white focus:outline-none focus:border-indigo-500/50 transition resize-none text-sm placeholder-gray-700"
+                      placeholder="Define quién eres, tu profesión y cómo quieres que iE se comporte contigo...">{{ current_user.user_context or '' }}</textarea>
+                    <p class="text-[9px] text-gray-600 mt-2 italic px-1">Describe tu marco operativo, principios de
+                      interacción y preferencias.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Tab: Audio -->
+            <div id="tab-audio" class="settings-tab hidden space-y-8">
+              <div class="p-8 bg-indigo-600/5 rounded-[2.5rem] border border-indigo-500/10 text-center space-y-4">
+                <div class="w-20 h-20 bg-indigo-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <span class="text-4xl text-indigo-400">🎙️</span>
+                </div>
+                <h4 class="text-xl font-bold text-white">Configuración de Voz</h4>
+                <p class="text-gray-500 text-sm">Próximamente: Selección de voces iE y ajuste de sensibilidad de VAD.
+                </p>
+              </div>
+            </div>
+
+            <!-- Tab: System -->
+            <div id="tab-system" class="settings-tab hidden space-y-8">
+              <div class="space-y-6">
+                <div>
+                  <label class="block text-[10px] text-gray-500 uppercase font-black mb-2">Idioma de la
+                    Aplicación</label>
+                  <select
+                    class="w-full bg-white/5 border border-white/5 rounded-2xl px-5 py-4 text-white outline-none appearance-none">
+                    <option value="es" selected>Español</option>
+                    <option value="en">English (Coming soon)</option>
+                  </select>
+                </div>
+                <div class="flex items-center justify-between p-6 bg-white/5 rounded-2xl border border-white/5">
+                  <span class="text-white font-bold text-sm">Auto-ajuste de escala</span>
+                  <label class="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" checked class="sr-only peer">
+                    <div
+                      class="w-11 h-6 bg-white/10 rounded-full peer peer-checked:bg-cyan-600 after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-full">
+                    </div>
+                  </label>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Footer Actions -->
+          <div class="px-10 py-8 bg-[#000] border-t border-white/5 flex justify-end gap-4 flex-shrink-0">
+            <button onclick="closeSettingsModal()"
+              class="px-6 py-4 text-gray-500 font-bold uppercase tracking-widest text-[10px] hover:text-white transition">Cancelar</button>
+            <button id="save-settings-btn" onclick="saveAjustes()"
+              class="px-10 py-4 bg-indigo-600 text-white font-black uppercase tracking-[0.2em] text-xs rounded-2xl transition-all hover:bg-indigo-500 active:scale-[0.98] shadow-lg shadow-indigo-600/20">
+              Guardar Evolución
+            </button>
+          </div>
+        </main>
+      </div>
+    </div>
+  </div>
+
+  <input type="hidden" id="setting-style" value="{{ current_user.response_style or 'default' }}">
+
+  <!-- Content Area -->
+  <div class="flex-1 flex flex-col relative bg-[#111] overflow-hidden">
+    <!-- Center Branding Overlay -->
+    <div id="center-stage"
+      class="absolute inset-0 flex flex-col items-center justify-center p-6 z-20 transition-all duration-700 bg-[#111]">
+      <div class="text-center mb-12 animate-fade-in">
+        <div class="w-16 h-16 rounded-full bg-white flex items-center justify-center mx-auto mb-6 shadow-2xl">
+          <span class="text-black font-black text-2xl">iE</span>
+        </div>
+        <h1 class="text-3xl md:text-[2.5rem] font-bold text-white mb-2 tracking-tight">¿En qué puedo ayudarte?</h1>
+        <p class="text-[10px] text-gray-500 uppercase tracking-[0.4em] font-bold">Inteligencia Evolutiva</p>
+      </div>
+
+      <div class="w-full max-w-4xl grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 px-6 scale-95 opacity-90">
+        <div class="suggestion-card" onclick="usePrompt('Ayúdame a estudiar y aprender algo nuevo')">
+          <div class="text-2xl mb-3">📚</div>
+          <div class="text-sm font-bold text-white mb-1">Estudiar y aprender</div>
+          <div class="text-[10px] text-gray-500 leading-tight">Repaso rápido y dudas profundas.</div>
+        </div>
+        <div class="suggestion-card" onclick="usePrompt('Explora modelos en Hugging Face')">
+          <div class="text-2xl mb-3">🛠️</div>
+          <div class="text-sm font-bold text-white mb-1">Hugging Face</div>
+          <div class="text-[10px] text-gray-500 leading-tight">Mapeo de redes y modelos abiertos.</div>
+        </div>
+        <div class="suggestion-card" onclick="usePrompt('Resume mi año con iE Inteligencia Evolutiva')">
+          <div class="text-2xl mb-3">🗒️</div>
+          <div class="text-sm font-bold text-white mb-1">Tu año con iE</div>
+          <div class="text-[10px] text-gray-500 leading-tight">Recopilación de hitos y progresos.</div>
+        </div>
+        <div class="suggestion-card" onclick="usePrompt('Explora nuevas aplicaciones evolutivas')">
+          <div class="text-2xl mb-3">🚀</div>
+          <div class="text-sm font-bold text-white mb-1">Explorar apps</div>
+          <div class="text-[10px] text-gray-500 leading-tight">Herramientas para expandir límites.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Discussion List -->
+    <div id="messages-container"
+      class="flex-1 overflow-y-auto p-4 md:p-12 space-y-12 z-10 custom-scrollbar opacity-0 pointer-events-none transition-opacity duration-700"
+      style="padding-bottom: 200px;">
+      <!-- Messages will be injected here -->
+    </div>
+
+    <!-- Bottom Input Area -->
+    <div id="input-container"
+      class="absolute inset-x-0 bottom-0 z-30 flex flex-col items-center px-4 pb-12 pt-10 bg-gradient-to-t from-[#111] via-[#111]/95 to-transparent">
+      <div id="search-wrapper"
+        class="w-full max-w-3xl bg-[#2f2f2f] rounded-[2.5rem] border border-[#4d4d4d] shadow-2xl transition-all relative">
+        <div class="flex items-end p-2 gap-1 px-4">
+          <!-- Attachment Button -->
+          <div class="pb-1">
+            <button id="add-btn" class="p-3 text-gray-400 hover:text-white hover:bg-white/5 rounded-full transition">
+              <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+              </svg>
+            </button>
+          </div>
+
+          <!-- Main Input -->
+          <textarea id="user-input" rows="1" maxlength="2000"
+            class="flex-1 bg-transparent text-white text-base md:text-lg placeholder-[#676767] px-2 py-3 resize-none outline-none max-h-60 overflow-y-auto leading-normal custom-scrollbar"
+            placeholder="Pregunta lo que quieras"></textarea>
+
+          <!-- Action Buttons -->
+          <div class="flex items-center pb-2 gap-2 pr-1">
+            <span
+              class="px-1.5 py-0.5 rounded-md border border-white/10 text-[9px] font-bold font-mono text-gray-500">5.2</span>
+            <button id="record-btn" class="p-1.5 text-gray-400 hover:text-white transition" title="Dictar">
+              <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+              </svg>
+            </button>
+            <button id="voice-mode-btn"
+              class="flex items-center gap-2 px-3 py-2 bg-indigo-500/10 border border-indigo-500/20 rounded-xl text-indigo-400 hover:bg-indigo-500 hover:text-white transition-all group"
+              title="Modo Lumina (Voz Avanzada)">
+              <svg class="w-5 h-5 group-hover:scale-110 transition-transform" fill="currentColor" viewBox="0 0 24 24">
+                <path
+                  d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z" />
+              </svg>
+              <span class="text-[10px] font-black uppercase tracking-tighter hidden md:inline">Voz Avanzada</span>
+            </button>
+            <button id="send-btn-v5"
+              class="w-8 h-8 flex items-center justify-center bg-white text-black rounded-full hover:bg-gray-200 transition-all active:scale-90 disabled:opacity-30 disabled:cursor-not-allowed"
+              disabled>
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="4">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M5 10l7-7m0 0l7 7m-7-7v18" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+      <p class="text-[10px] text-gray-600 mt-2 font-medium opacity-60">iE puede cometer errores. Considera verificar la
+        información importante.</p>
+    </div>
+  </div>
+
+  <!-- Evolutionary Audio Controller -->
+  <div id="audio-controller">
+    <button id="audio-play-pause" onclick="toggleAudioPlayback()"
+      class="w-10 h-10 flex items-center justify-center bg-white text-black rounded-full hover:bg-gray-200 transition">
+      <svg id="play-pause-icon" class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+        <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" />
+      </svg>
+    </button>
+
+    <div class="flex flex-col min-w-[60px]">
+      <span id="audio-timer" class="text-xs font-mono text-white tracking-widest">00:00</span>
+      <span class="text-[8px] text-gray-500 uppercase font-black tracking-tighter">iE Leyendo</span>
+    </div>
+
+    <div class="flex items-center gap-4 border-l border-white/10 pl-6">
+      <button onclick="seekAudio(-15)" class="text-gray-400 hover:text-white transition" title="Retroceder 15s">
+        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M12.066 11.2a1 1 0 000 1.6l5.334 4A1 1 0 0019 16V8a1 1 0 00-1.6-.8l-5.334 4zM4.066 11.2a1 1 0 000 1.6l5.334 4A1 1 0 0011 16V8a1 1 0 00-1.6-.8l-5.334 4z" />
+        </svg>
+      </button>
+      <button onclick="seekAudio(15)" class="text-gray-400 hover:text-white transition" title="Adelantar 15s">
+        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M11.934 12.8a1 1 0 000-1.6l-5.334-4A1 1 0 005 8v8a1 1 0 001.6.8l5.334-4zM19.934 12.8a1 1 0 000-1.6l-5.334-4A1 1 0 0013 8v8a1 1 0 001.6.8l5.334-4z" />
+        </svg>
+      </button>
+      <button onclick="closeAudioController()" class="ml-2 text-gray-500 hover:text-red-500 transition">
+        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // DOM Elements
+  const messagesContainer = document.getElementById('messages-container');
+  const centerStage = document.getElementById('center-stage');
+  const userInput = document.getElementById('user-input');
+  const sendBtn = document.getElementById('send-btn-v5');
+  const historyList = document.getElementById('chat-history-list');
+  const recordBtn = document.getElementById('record-btn');
+  const voiceModeBtn = document.getElementById('voice-mode-btn');
+  const voiceOverlay = document.getElementById('voice-overlay');
+  const closeVoiceBtn = document.getElementById('close-voice-btn');
+  const toggleSplitBtn = document.getElementById('toggle-split-btn');
+  const voiceMuteBtn = document.getElementById('voice-mute-btn');
+  const muteIcon = document.getElementById('mute-icon');
+  const voiceStatus = document.getElementById('voice-status');
+  const voiceOrb = document.getElementById('voice-orb');
+  const voiceTranscriptLive = document.getElementById('voice-transcript-live');
+
+  // Globals
+  let isRecording = false;
+  let isLuminaMode = false;
+  let currentSessionId = null;
+
+  // Audio Controller Globals
+  let currentUtterance = null;
+  let audioSeconds = 0;
+  let audioTimerInterval = null;
+  let isAudioPaused = false;
+  let currentAudioText = "";
+  let lastAudioBtn = null;
+  const audioController = document.getElementById('audio-controller');
+  const audioTimer = document.getElementById('audio-timer');
+  const playPauseIcon = document.getElementById('play-pause-icon');
+  let isMuted = false;
+  let isWindowed = false;
+  let mediaRecorder;
+  let audioChunks = [];
+  let isPlayingAudio = false;
+  let currentAIResponseAudio = null;
+
+  // VAD Config
+  let audioContext;
+  let analyser;
+  let silenceStart = null;
+  const SILENCE_THRESHOLD = 0.007;
+  const SILENCE_DURATION = 3000;
+
+  async function getAudioContext() {
+    if (!audioContext) {
+      audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    if (audioContext.state === 'suspended') {
+      await audioContext.resume();
+    }
+    return audioContext;
+  }
+
+  // Initialization
+  window.addEventListener('DOMContentLoaded', () => {
+    loadSessions();
+    userInput.focus();
+    const urlParams = new URLSearchParams(window.location.search);
+    const sid = urlParams.get('session_id');
+    if (sid) {
+      currentSessionId = sid;
+      loadSessionData(sid);
+    }
+  });
+
+  // Unified Chat Mode Transition
+  function transitionToChat() {
+    if (!isFirstMessage) return;
+    centerStage.classList.add('hidden');
+    messagesContainer.classList.remove('opacity-0', 'pointer-events-none');
+    isFirstMessage = false;
+  }
+
+  // Load Session History
+  async function loadSessions() {
+    try {
+      const res = await fetch('/api/chats');
+      const sessions = await res.json();
+      historyList.innerHTML = '';
+
+      if (sessions.length === 0) {
+        historyList.innerHTML = '<div class="p-4 text-xs text-gray-600 italic">No hay conversaciones recientes</div>';
+        return;
+      }
+
+      sessions.forEach(s => {
+        const item = document.createElement('div');
+        item.className = `sidebar-item ${currentSessionId == s.id ? 'active' : ''}`;
+        item.innerHTML = `
+          <svg class="w-4 h-4 text-[#8e8ea0] flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/></svg>
+          <span class="truncate">${s.title}</span>
+        `;
+        item.onclick = () => loadSession(s.id);
+        historyList.appendChild(item);
+      });
+    } catch (e) {
+      console.error("Failed to load sessions", e);
+    }
+  }
+
+  // Load specific chat detail
+  async function loadSession(id) {
+    location.href = `/chat?session_id=${id}`;
+  }
+
+  async function loadSessionData(id) {
+    currentSessionId = id;
+    transitionToChat();
+    messagesContainer.innerHTML = '<div class="animate-pulse flex items-center justify-center p-20 text-gray-500 font-bold uppercase tracking-widest text-[10px]">Cargando consciencia...</div>';
+
+    try {
+      const res = await fetch(`/api/chats/${id}`);
+      const data = await res.json();
+      messagesContainer.innerHTML = '';
+      data.messages.forEach(m => appendMessage(m.role, m.content));
+      loadSessions();
+      messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    } catch (e) {
+      messagesContainer.innerHTML = '<div class="text-red-500 p-10 text-center uppercase text-[10px] font-bold tracking-widest">Error al recuperar memoria.</div>';
+    }
+  }
+
+  // Use Prompt from Suggestion Cards
+  function usePrompt(text) {
+    userInput.value = text;
+    userInput.style.height = 'auto';
+    userInput.style.height = (userInput.scrollHeight) + 'px';
+    sendBtn.disabled = false;
+    sendMessage();
+  }
+
+  // Textarea Logic
+  userInput.addEventListener('input', function () {
+    this.style.height = 'auto';
+    this.style.height = (this.scrollHeight) + 'px';
+    sendBtn.disabled = !this.value.trim();
+  });
+
+  userInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
+    }
+  });
+
+  // Sending Logic
+  async function sendMessage(forcedText = null) {
+    const text = forcedText ? forcedText : userInput.value.trim();
+    if (!text) return;
+
+    transitionToChat();
+    appendMessage('user', text);
+    userInput.value = '';
+    userInput.style.height = 'auto';
+    sendBtn.disabled = true;
+
+    const streamId = 'ai-' + Date.now();
+    const streamContainer = appendStreamingContainer(streamId);
+    let fullResponse = "";
+
+    try {
+      const url = `/api/chat/stream?message=${encodeURIComponent(text)}&search=${isSearchActive}${currentSessionId ? `&session_id=${currentSessionId}` : ''}`;
+      const response = await fetch(url);
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
+        const chunk = decoder.decode(value);
+        const lines = chunk.split('\n');
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            const data = JSON.parse(line.slice(6));
+            if (data.session_id && !currentSessionId) {
+              currentSessionId = data.session_id;
+              loadSessions();
+            }
+            if (data.content) {
+              fullResponse += data.content;
+              streamContainer.innerHTML = formatText(fullResponse);
+              messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            }
+          }
+        }
+      }
+    } catch (e) {
+      streamContainer.innerHTML = '<span class="text-red-400 italic font-bold text-xs uppercase tracking-widest">Error de núcleo. Reintentando enlace...</span>';
+    }
+  }
+
+  // UI Construction
+  function appendMessage(role, text, isAudio = false) {
+    const div = document.createElement('div');
+    div.className = `flex ${role === 'user' ? 'justify-end' : 'justify-start'} animate-fade-in px-4 md:px-0 message-group group`;
+
+    if (role === 'user') {
+      const content = isAudio
+        ? `<div class="flex items-center gap-3"><div class="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-lg">🎤</div> <div class="flex flex-col"><span class="text-[9px] text-gray-500 uppercase font-black tracking-tighter">Nota de Voz</span><span class="text-white italic text-sm">"${escapeHtml(text)}"</span></div></div>`
+        : escapeHtml(text);
+      div.innerHTML = `
+            <div class="relative flex flex-col items-end gap-2 max-w-xl">
+                <div class="bg-[#2a2a2a] text-white rounded-2xl px-6 py-3 shadow-xl border border-white/5 whitespace-pre-wrap leading-relaxed w-full">
+                    ${content}
+                </div>
+                <div class="message-actions flex items-center gap-1">
+                   <button onclick="copyToClipboard(this)" class="action-btn" title="Copiar">
+                      <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/></svg>
+                   </button>
+                   <button onclick="editMessage(this)" class="action-btn" title="Editar">
+                      <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+                   </button>
+                   <button onclick="speakText(this)" class="action-btn" title="Leer">
+                      <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"/></svg>
+                   </button>
+                </div>
+            </div>
+        `;
+    } else {
+      div.innerHTML = `
+            <div class="flex gap-4 max-w-4xl w-full">
+                <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-indigo-600 to-purple-700 flex-shrink-0 flex items-center justify-center shadow-lg border border-white/10 mt-1">
+                    <span class="text-white font-black text-xs">iE</span>
+                </div>
+                <div class="flex flex-col gap-1 w-full relative">
+                    <span class="text-[9px] font-black text-indigo-400 uppercase tracking-[0.2em] ml-1">iE Evolutiva</span>
+                    <div class="markdown-prose text-gray-200 text-base leading-relaxed p-4 bg-white/5 rounded-2xl border border-white/5 w-full">
+                        ${formatText(text)}
+                    </div>
+                    <div class="message-actions flex items-center gap-1 mt-1 ml-1">
+                       <button onclick="copyToClipboard(this)" class="action-btn" title="Copiar">
+                          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/></svg>
+                       </button>
+                       <button onclick="speakText(this)" class="action-btn" title="Leer">
+                          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"/></svg>
+                       </button>
+                       <button onclick="regenerateResponse(this)" class="action-btn" title="Regenerar">
+                          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                       </button>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+    messagesContainer.appendChild(div);
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+  }
+
+  function appendStreamingContainer(id) {
+    const div = document.createElement('div');
+    div.className = "flex justify-start animate-fade-in px-4 md:px-0 message-group group";
+    div.innerHTML = `
+        <div class="flex gap-4 max-w-4xl w-full">
+            <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-indigo-600 to-purple-700 flex-shrink-0 flex items-center justify-center shadow-lg border border-white/10 mt-1">
+                <span class="text-white font-black text-xs">iE</span>
+            </div>
+            <div class="flex flex-col gap-1 w-full relative">
+                <span class="text-[9px] font-black text-indigo-400 uppercase tracking-[0.2em] ml-1">Sincronizando...</span>
+                <div id="${id}" class="markdown-prose text-gray-200 text-base leading-relaxed p-4 bg-white/5 rounded-2xl border border-white/5 w-full">
+                    <span class="inline-block w-2 h-5 bg-indigo-500 animate-pulse align-middle rounded-full"></span>
+                </div>
+                <div class="message-actions flex items-center gap-1 mt-1 ml-1">
+                   <button onclick="copyToClipboard(this)" class="action-btn" title="Copiar">
+                      <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/></svg>
+                   </button>
+                   <button onclick="speakText(this)" class="action-btn" title="Leer">
+                      <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"/></svg>
+                   </button>
+                   <button onclick="regenerateResponse(this)" class="action-btn" title="Regenerar">
+                      <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                   </button>
+                </div>
+            </div>
+        </div>
+    `;
+    messagesContainer.appendChild(div);
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    return document.getElementById(id);
+  }
+
+  // String Utils
+  function escapeHtml(text) {
+    const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
+    return text.replace(/[&<>"']/g, m => map[m]);
+  }
+
+  function formatText(text) {
+    let formatted = text.replace(/\n/g, '<br>');
+    formatted = formatted.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+    formatted = formatted.replace(/# (.*?)/g, '<h1 class="text-3xl font-bold my-6">$1</h1>');
+    formatted = formatted.replace(/## (.*?)/g, '<h2 class="text-2xl font-bold my-4">$1</h2>');
+    formatted = formatted.replace(/> (.*?)/g, '<blockquote class="border-l-4 border-indigo-500 pl-4 my-4 italic text-indigo-200">$1</blockquote>');
+    formatted = formatted.replace(/```([\s\S]*?)```/g, '<pre class="bg-black/80 p-5 rounded-2xl my-5 text-xs font-mono border border-white/10 overflow-auto shadow-inner">$1</pre>');
+    formatted = formatted.replace(/`(.*?)`/g, '<code class="bg-white/10 px-1.5 py-0.5 rounded text-indigo-300 font-mono text-sm">$1</code>');
+    return formatted;
+  }
+
+  // Record Handlers
+  async function startRecordingSession() {
+    if (isRecording) return;
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const ctx = await getAudioContext();
+      const source = ctx.createMediaStreamSource(stream);
+      analyser = ctx.createAnalyser();
+      analyser.fftSize = 256;
+      source.connect(analyser);
+
+      mediaRecorder = new MediaRecorder(stream);
+      audioChunks = [];
+      mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+      mediaRecorder.onstop = () => {
+        const blob = new Blob(audioChunks, { type: 'audio/webm' });
+        if (!isMuted) sendAudio(blob);
+        cleanupVAD();
+        stream.getTracks().forEach(t => t.stop());
+      };
+
+      mediaRecorder.start();
+      isRecording = true;
+      recordBtn.classList.add('text-red-500', 'animate-pulse');
+
+      if (isLuminaMode) {
+        voiceStatus.innerText = "Te escucho...";
+        voiceStatus.classList.remove('animate-pulse');
+        voiceOrb.classList.add('opacity-100');
+        voiceOrb.classList.remove('opacity-20');
+      }
+      initVADLoop();
+    } catch (err) {
+      console.error("Recording error:", err);
+      if (isLuminaMode) voiceStatus.innerText = "Error micrófono";
+    }
+  }
+
+  function stopRecordingSession() {
+    if (!isRecording) return;
+    if (mediaRecorder && mediaRecorder.state !== 'inactive') mediaRecorder.stop();
+    isRecording = false;
+    recordBtn.classList.remove('text-red-500', 'animate-pulse');
+    if (isLuminaMode) {
+      voiceStatus.innerText = "Procesando...";
+      voiceStatus.classList.add('animate-pulse');
+      voiceOrb.classList.add('opacity-20');
+      voiceOrb.classList.remove('opacity-100');
+    }
+  }
+
+  function initVADLoop() {
+    const bufferLength = analyser.frequencyBinCount;
+    const dataArray = new Uint8Array(bufferLength);
+    silenceStart = null;
+
+    function checkVAD() {
+      if (!isRecording) return;
+      analyser.getByteTimeDomainData(dataArray);
+      let sum = 0;
+      for (let i = 0; i < bufferLength; i++) {
+        const val = (dataArray[i] - 128) / 128;
+        sum += val * val;
+      }
+      const rms = Math.sqrt(sum / bufferLength);
+
+      if (rms > SILENCE_THRESHOLD * 2.8 && isPlayingAudio && currentAIResponseAudio) {
+        currentAIResponseAudio.pause();
+        isPlayingAudio = false;
+        voiceStatus.innerText = "Te escucho...";
+      }
+
+      if (rms < SILENCE_THRESHOLD) {
+        if (silenceStart === null) silenceStart = Date.now();
+        else if (Date.now() - silenceStart > SILENCE_DURATION) {
+          stopRecordingSession();
+          return;
+        }
+      } else {
+        silenceStart = null;
+      }
+      requestAnimationFrame(checkVAD);
+    }
+    checkVAD();
+  }
+
+  function cleanupVAD() {
+    // Session cleanup
+  }
+
+  async function sendAudio(blob) {
+    const formData = new FormData();
+    formData.append("audio", blob, "voice.webm");
+    try {
+      const resp = await fetch("/process", { method: "POST", body: formData });
+      const data = await resp.json();
+      if (data.error) return;
+
+      appendMessage('user', data.transcript, true);
+      const streamId = 'ai-' + Date.now();
+      const streamContainer = appendStreamingContainer(streamId);
+      streamContainer.innerHTML = formatText(data.response);
+      messagesContainer.scrollTop = messagesContainer.scrollHeight;
+
+      if (isLuminaMode) {
+        voiceStatus.innerText = "iE Hablando...";
+        voiceTranscriptLive.innerText = data.response.substring(0, 150) + (data.response.length > 150 ? '...' : '');
+      }
+
+      if (data.audio_url) {
+        isPlayingAudio = true;
+        currentAIResponseAudio = new Audio(data.audio_url);
+        currentAIResponseAudio.play();
+        currentAIResponseAudio.onended = () => {
+          isPlayingAudio = false;
+          if (isLuminaMode) {
+            voiceStatus.innerText = "Listo";
+            voiceTranscriptLive.innerText = "";
+            setTimeout(() => {
+              if (isLuminaMode && !isRecording) startRecordingSession();
+            }, 600);
+          }
+        };
+      }
+    } catch (e) {
+      console.error("Audio processing error:", e);
+      if (isLuminaMode) voiceStatus.innerText = "Error de enlace";
+    }
+  }
+
+  // Event Listeners
+  voiceModeBtn.onclick = async () => {
+    isLuminaMode = true;
+    voiceOverlay.classList.remove('opacity-0', 'pointer-events-none');
+    voiceStatus.innerText = "Preparando...";
+    try {
+      await getAudioContext();
+      setTimeout(startRecordingSession, 400);
+    } catch (e) {
+      voiceStatus.innerText = "Error audio";
+    }
+  };
+
+  closeVoiceBtn.onclick = () => {
+    isLuminaMode = false;
+    voiceOverlay.classList.add('opacity-0', 'pointer-events-none');
+    stopRecordingSession();
+    if (currentAIResponseAudio) currentAIResponseAudio.pause();
+  };
+
+  voiceMuteBtn.onclick = () => {
+    isMuted = !isMuted;
+    voiceMuteBtn.classList.toggle('bg-red-500/20', isMuted);
+    voiceMuteBtn.classList.toggle('text-red-500', isMuted);
+    muteIcon.innerHTML = isMuted
+      ? '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2" />'
+      : '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />';
+  };
+
+  toggleSplitBtn.onclick = () => {
+    isWindowed = !isWindowed;
+    voiceOverlay.classList.toggle('windowed', isWindowed);
+  };
+
+  document.getElementById('voice-rings').onclick = () => {
+    if (isRecording) stopRecordingSession();
+    else if (!isPlayingAudio) startRecordingSession();
+    else {
+      currentAIResponseAudio.pause();
+      isPlayingAudio = false;
+      startRecordingSession();
+    }
+  };
+
+  recordBtn.onclick = () => {
+    if (isRecording) stopRecordingSession();
+    else startRecordingSession();
+  };
+
+  document.getElementById('web-search-btn')?.addEventListener('click', () => {
+    isSearchActive = !isSearchActive;
+    document.getElementById('web-search-btn').classList.toggle('text-indigo-400', isSearchActive);
+  });
+
+  document.getElementById('new-chat-top-btn').onclick = () => location.href = '/chat';
+
+  function openSettingsModal() {
+    document.getElementById('settings-modal').classList.remove('hidden');
+    // Ensure first tab is active
+    showSettingsTab('general');
+  }
+
+  function closeSettingsModal() {
+    document.getElementById('settings-modal').classList.add('hidden');
+  }
+
+  function showSettingsTab(tabId) {
+    // Hide all tabs
+    document.querySelectorAll('.settings-tab').forEach(tab => tab.classList.add('hidden'));
+    document.querySelectorAll('.settings-tab').forEach(tab => tab.classList.remove('active'));
+
+    // Deactivate all cat buttons
+    document.querySelectorAll('.settings-cat-btn').forEach(btn => btn.classList.remove('active'));
+
+    // Show selected tab
+    const targetTab = document.getElementById('tab-' + tabId);
+    if (targetTab) {
+      targetTab.classList.remove('hidden');
+      targetTab.classList.add('active');
+    }
+
+    // Activate button
+    const targetBtn = document.getElementById('cat-' + tabId);
+    if (targetBtn) targetBtn.classList.add('active');
+
+    // Update Title
+    const titles = {
+      'general': 'General',
+      'personalization': 'Identidad iE',
+      'audio': 'Voz y Audio',
+      'system': 'Aplicación'
+    };
+    document.getElementById('settings-tab-title').innerText = titles[tabId] || 'Ajustes';
+  }
+
+  function updateStyleHidden(style) {
+    document.getElementById('setting-style').value = style;
+  }
+
+  async function saveAjustes() {
+    const btn = document.getElementById('save-settings-btn');
+    const oldText = btn.innerText;
+    btn.innerText = 'Guardando Evolución...';
+    btn.disabled = true;
+
+    const payload = {
+      nickname: document.getElementById('setting-nickname').value,
+      user_context: document.getElementById('setting-context').value,
+      response_style: document.getElementById('setting-style').value,
+      enable_memory: document.getElementById('setting-memory').checked
+    };
+
+    try {
+      const resp = await fetch('/api/settings/save', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      if (resp.ok) {
+        btn.innerText = '¡Evolución Sincronizada!';
+        btn.classList.add('bg-green-600/20', 'text-green-400');
+        setTimeout(() => {
+          btn.innerText = oldText;
+          btn.classList.remove('bg-green-600/20', 'text-green-400');
+          btn.disabled = false;
+          closeSettingsModal();
+        }, 1500);
+      }
+    } catch (err) {
+      btn.innerText = 'Error de Enlace';
+      btn.disabled = false;
+    }
+  }
+  function copyToClipboard(btn) {
+    const group = btn.closest('.message-group');
+    const contentArea = group.querySelector('.markdown-prose') || group.querySelector('.bg-[#2a2a2a]');
+    const content = contentArea?.innerText;
+
+    if (content) {
+      navigator.clipboard.writeText(content).then(() => {
+        const oldHtml = btn.innerHTML;
+        btn.innerHTML = '<svg class="w-4 h-4 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>';
+        setTimeout(() => btn.innerHTML = oldHtml, 2000);
+      });
+    }
+  }
+
+  function speakText(btn) {
+    const group = btn.closest('.message-group');
+    const contentArea = group.querySelector('.markdown-prose') || group.querySelector('.bg-[#2a2a2a]');
+    const content = contentArea?.innerText;
+
+    if (content) {
+      if (lastAudioBtn) lastAudioBtn.innerHTML = lastAudioBtn.dataset.oldHtml || lastAudioBtn.innerHTML;
+
+      currentAudioText = content;
+      lastAudioBtn = btn;
+      btn.dataset.oldHtml = btn.innerHTML;
+
+      window.speechSynthesis.cancel();
+      startAudioPlayback(content);
+
+      // Update UI
+      btn.innerHTML = '<svg class="w-4 h-4 text-indigo-500 animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"/></svg>';
+      audioController.classList.add('active');
+    }
+  }
+
+  function startAudioPlayback(text) {
+    clearInterval(audioTimerInterval);
+    audioSeconds = 0;
+    audioTimer.innerText = "00:00";
+    isAudioPaused = false;
+    updatePlayPauseUI();
+
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = 'es-ES';
+    currentUtterance = utterance;
+
+    utterance.onstart = () => {
+      audioTimerInterval = setInterval(() => {
+        if (!isAudioPaused) {
+          audioSeconds++;
+          const mins = String(Math.floor(audioSeconds / 60)).padStart(2, '0');
+          const secs = String(audioSeconds % 60).padStart(2, '0');
+          audioTimer.innerText = `${mins}:${secs}`;
+        }
+      }, 1000);
+    };
+
+    utterance.onend = () => {
+      closeAudioController();
+    };
+
+    window.speechSynthesis.speak(utterance);
+  }
+
+  function toggleAudioPlayback() {
+    if (isAudioPaused) {
+      window.speechSynthesis.resume();
+      isAudioPaused = false;
+    } else {
+      window.speechSynthesis.pause();
+      isAudioPaused = true;
+    }
+    updatePlayPauseUI();
+  }
+
+  function updatePlayPauseUI() {
+    if (isAudioPaused) {
+      playPauseIcon.innerHTML = '<path d="M8 5v14l11-7z"/>'; // Play
+    } else {
+      playPauseIcon.innerHTML = '<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>'; // Pause
+    }
+  }
+
+  function seekAudio(seconds) {
+    // Estimating character offset for seeking (naive but works for simple TTS)
+    // Avg reading speed is ~15 chars per second
+    const charOffset = seconds * 15;
+    window.speechSynthesis.cancel();
+
+    // In a real implementation we would track charIndex, for now we re-start or estimeta
+    // Simple mock: just restart or stop. Since Speech API is limited, we simulate.
+    // Let's actually try to use the onboundary event if we want precision, but for now:
+    startAudioPlayback(currentAudioText);
+  }
+
+  function closeAudioController() {
+    window.speechSynthesis.cancel();
+    clearInterval(audioTimerInterval);
+    audioController.classList.remove('active');
+    if (lastAudioBtn) {
+      lastAudioBtn.innerHTML = lastAudioBtn.dataset.oldHtml || lastAudioBtn.innerHTML;
+    }
+    isAudioPaused = false;
+  }
+
+  function editMessage(btn) {
+    const group = btn.closest('.message-group');
+    const contentArea = group.querySelector('.bg-[#2a2a2a]');
+    const content = contentArea?.innerText;
+    if (content) {
+      userInput.value = content;
+      userInput.focus();
+      userInput.style.height = 'auto';
+      userInput.style.height = (userInput.scrollHeight) + 'px';
+      sendBtn.disabled = false;
+      window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+    }
+  }
+
+  async function regenerateResponse(btn) {
+    const group = btn.closest('.message-group');
+    let prev = group.previousElementSibling;
+    while (prev && !prev.classList.contains('justify-end')) {
+      prev = prev.previousElementSibling;
+    }
+
+    if (prev) {
+      const userContentArea = prev.querySelector('.bg-[#2a2a2a]');
+      const userText = userContentArea?.innerText;
+      if (userText) {
+        group.remove();
+        await sendMessage(userText);
+      }
+    }
+  }
+  // PWA Support & iOS Detection
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+  const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+
+  if (isIOS && !isStandalone) {
+    // Show a subtle toast or message for iOS users to "Add to Home Screen"
+    const pwaToast = document.createElement('div');
+    pwaToast.className = 'fixed top-20 left-1/2 -translate-x-1/2 z-[200] bg-indigo-600/90 backdrop-blur-xl text-white px-6 py-3 rounded-2xl shadow-2xl flex items-center gap-4 text-sm font-medium border border-white/20 animate-bounce';
+    pwaToast.innerHTML = `
+      <span>Instala iE: Pulsa <svg class="inline w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a2 2 0 002 2h12a2 2 0 002-2v-1M12 12V4m0 0l3 3m-3-3l-3 3"/></svg> y luego "Añadir a pantalla de inicio"</span>
+      <button onclick="this.parentElement.remove()" class="text-white/50 hover:text-white">✕</button>
+    `;
+    document.body.appendChild(pwaToast);
+
+    // Auto remove after 10s
+    setTimeout(() => pwaToast.remove(), 10000);
+  }
+</script>
+{% endblock %}

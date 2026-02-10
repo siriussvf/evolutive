@@ -1,0 +1,21 @@
+{
+    "name": "Inteligencia Evolutiva",
+    "short_name": "iE Chat",
+    "description": "Puente entre lo humano y lo digital. Evolución de la consciencia.",
+    "start_url": "/chat",
+    "display": "standalone",
+    "background_color": "#0a0a0a",
+    "theme_color": "#6366f1",
+    "icons": [
+        {
+            "src": "/static/android-chrome-192.png",
+            "sizes": "192x192",
+            "type": "image/png"
+        },
+        {
+            "src": "/static/apple-touch-icon.png",
+            "sizes": "180x180",
+            "type": "image/png"
+        }
+    ]
+}

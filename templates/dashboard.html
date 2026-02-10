@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block topbar_left %}
+  <div class="crumb">Dashboard · Visión general</div>
+{% endblock %}
+{% block content %}
+  <h2>Dashboard</h2>
+  <div class="card">
+    <div class="grid">
+      <div>
+        <div class="k">Estado</div>
+        <div class="v">Online</div>
+      </div>
+      <div>
+        <div class="k">Módulos</div>
+        <div class="v">5</div>
+      </div>
+      <div>
+        <div class="k">Navegación</div>
+        <div class="v">Directa</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="btn-row">
+    <a class="btn" href="{{ url_for('chat') }}">Abrir Chat (Voz)</a>
+    <a class="btn secondary" href="{{ url_for('radio') }}">Abrir Radio</a>
+    <a class="btn secondary" href="{{ url_for('news') }}">Abrir Noticias</a>
+    <a class="btn secondary" href="{{ url_for('gallery') }}">Abrir Galería</a>
+  </div>
+{% endblock %}

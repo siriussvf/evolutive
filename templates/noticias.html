@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mx-auto py-24 px-6 md:px-12">
+    <div class="mb-16 text-center">
+        <h1 class="text-4xl md:text-6xl font-bold text-white mb-6">Crónicas de iEvolutiva</h1>
+        <p class="text-xl text-indigo-300 max-w-2xl mx-auto">Últimas actualizaciones, crónicas y avances en la
+            Inteligencia Evolutiva.</p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+        {% for item in items %}
+        <article
+            class="glass-panel overflow-hidden rounded-3xl group flex flex-col transition-all duration-500 hover:scale-[1.02] hover:shadow-2xl hover:shadow-indigo-500/20">
+            {% if item.image_filename %}
+            <div class="h-56 overflow-hidden">
+                <img src="{{ url_for('static', filename='img/' + item.image_filename) }}" alt="{{ item.title }}"
+                    class="w-full h-full object-cover transition duration-700 group-hover:scale-110">
+            </div>
+            {% else %}
+            <div class="h-56 bg-gradient-to-br from-indigo-900/40 to-purple-900/40 flex items-center justify-center">
+                <span class="text-6xl opacity-30">📰</span>
+            </div>
+            {% endif %}
+
+            <div class="p-8 flex-1 flex flex-col">
+                <div class="flex items-center gap-3 text-xs text-indigo-400 font-mono mb-4 uppercase tracking-widest">
+                    <span>{{ item.created_at.strftime('%d %b %Y') }}</span>
+                    <span class="w-1 h-1 bg-indigo-500 rounded-full"></span>
+                    <span>Actualización</span>
+                </div>
+                <h2 class="text-2xl font-bold text-white mb-4 group-hover:text-indigo-400 transition">{{ item.title }}
+                </h2>
+                <div class="text-gray-400 mb-8 line-clamp-3 text-sm leading-relaxed">
+                    {{ item.content | striptags | truncate(150) }}
+                </div>
+                <div class="mt-auto">
+                    <a href="{{ url_for('noticia_detalle', item_id=item.id) }}"
+                        class="inline-flex items-center gap-2 text-indigo-400 font-semibold hover:text-white transition group/link">
+                        Leer Crónica <span class="group-hover/link:translate-x-1 transition">→</span>
+                    </a>
+                </div>
+            </div>
+        </article>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
